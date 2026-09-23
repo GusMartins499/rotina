@@ -1,0 +1,4 @@
+*.ods
+node_modules/
+.env
+.env.local
