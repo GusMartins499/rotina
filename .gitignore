@@ -2,3 +2,6 @@
 node_modules/
 .env
 .env.local
+data/
+.next/
+next-env.d.ts
