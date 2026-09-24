@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { overlaps } from "./overlaps.js";
+import { overlaps } from "./overlaps";
 
 describe("interval overlap", () => {
   it("detects overlap when the new interval starts inside an existing one", () => {

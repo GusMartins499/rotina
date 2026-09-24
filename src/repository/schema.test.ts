@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import type { Database } from "better-sqlite3";
-import { createInMemoryDatabase } from "./testing.js";
+import { createInMemoryDatabase } from "./testing";
 
 let db: Database;
 
@@ -36,7 +36,7 @@ const insertBlock = (values: {
     );
 
 beforeEach(() => {
-  db = createInMemoryDatabase();
+  db = createInMemoryDatabase().connection;
   insertCommitment({ name: "TRABALHO", color: "#d73a4a", dailyHours: 8 });
   insertWeek("2026-09-21", "current");
 });

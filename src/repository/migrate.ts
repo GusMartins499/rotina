@@ -1,6 +1,6 @@
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
-import { MIGRATIONS_FOLDER } from "./migrationsFolder.js";
-import { openDatabase } from "./db.js";
+import { MIGRATIONS_FOLDER } from "./migrationsFolder";
+import { openDatabase } from "./db";
 
 const { connection, db } = openDatabase();
 migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
