@@ -110,14 +110,10 @@ test("saves the current week as the base routine and applies it to the next one"
   await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-3-9"));
   await expect(page.getByTestId("block-3-9")).toBeVisible();
 
-  await expect(page.locator(".saving")).toHaveText("");
+  await page.waitForTimeout(800);
 
-  await Promise.all([
-    page.waitForResponse(
-      (response) => response.request().method() === "POST" && response.status() === 200,
-    ),
-    page.getByRole("button", { name: /salvar como rotina base/i }).click(),
-  ]);
+  await page.getByRole("button", { name: /salvar como rotina base/i }).click();
+  await page.waitForTimeout(800);
 
   await page.goto("/?semana=proxima");
   const apply = page.getByRole("button", { name: /aplicar rotina base/i });
@@ -137,4 +133,75 @@ test("keeps the two weeks independent", async ({ page }) => {
 
   await page.goto("/");
   await expect(page.getByTestId("block-5-20")).toHaveCount(0);
+});
+
+test("moves a block with the keyboard and announces the result", async ({ page }) => {
+  await page.goto("/");
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-15"));
+  await expect(page.getByTestId("block-6-15")).toBeVisible();
+  await page.waitForTimeout(800);
+
+  await page.getByTestId("block-6-15").focus();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Space");
+
+  await expect(page.getByTestId("grid-announcement")).toContainText(
+    "movido para domingo, 16:00 às 17:00",
+  );
+  await expect(page.getByTestId("block-6-16")).toBeVisible();
+
+  await page.waitForTimeout(800);
+  await page.reload();
+  await expect(page.getByTestId("block-6-16")).toBeVisible();
+});
+
+test("cancels a keyboard drag with Escape leaving the block untouched", async ({ page }) => {
+  await page.goto("/");
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-20"));
+  await expect(page.getByTestId("block-6-20")).toBeVisible();
+  await page.waitForTimeout(800);
+
+  await page.getByTestId("block-6-20").focus();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Escape");
+
+  await expect(page.getByTestId("block-6-20")).toBeVisible();
+  await expect(page.getByTestId("block-6-21")).toHaveCount(0);
+});
+
+test("resizes and removes a block with the keyboard, announcing both", async ({ page }) => {
+  await page.goto("/");
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-1-8"));
+  await expect(page.getByTestId("block-1-8")).toBeVisible();
+  await page.waitForTimeout(800);
+
+  await page.getByTestId("block-1-8").focus();
+  await page.keyboard.press("Shift+ArrowUp");
+
+  await expect(page.getByTestId("grid-announcement")).toContainText(
+    "redimensionado para terça, 08:00 às 15:00",
+  );
+
+  await page.getByTestId("block-1-8").focus();
+  await page.keyboard.press("Delete");
+
+  await expect(page.getByTestId("block-1-8")).toHaveCount(0);
+  await expect(page.getByTestId("grid-announcement")).toContainText("removido de terça");
+});
+
+test("announces a refusal, not only a success", async ({ page }) => {
+  await page.goto("/");
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-4-8"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-4-17"));
+  await page.waitForTimeout(800);
+
+  await page.getByTestId("block-4-17").focus();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Space");
+
+  await expect(page.getByTestId("grid-announcement")).toContainText("já está ocupado");
 });

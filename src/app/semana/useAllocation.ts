@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { planAllocation } from "../../domain/allocation";
 import { planMove, planResize, type RearrangePlan } from "../../domain/rearrange";
+import {
+  REFUSAL,
+  announceMove,
+  announceRemoval,
+  announceResize,
+} from "../../domain/announce";
 import type { Block, Commitment } from "../../repository/schema";
 
 export type PlacedBlock = Omit<Block, "id" | "weekId"> & { id: number | null };
@@ -30,13 +36,7 @@ type Options = {
   remove?: (id: number) => Promise<WriteResult>;
 };
 
-type Placement = { weekday: number; startHour: number; endHour: number };
-
-const REFUSAL = {
-  overlap: "Esse horário já está ocupado.",
-  "out-of-day": "O compromisso não cabe nesse horário.",
-  empty: "Um bloco precisa ter pelo menos uma hora.",
-} as const;
+import type { Placement } from "../../domain/announce";
 
 const NOOP = async (): Promise<WriteResult> => ({ ok: true });
 
@@ -58,6 +58,16 @@ export function useAllocation({
   const [syncedFrom, setSyncedFrom] = useState(() => signatureOf(initialBlocks));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+
+  function refuse(reason: keyof typeof REFUSAL) {
+    setError(REFUSAL[reason]);
+    setAnnouncement(REFUSAL[reason]);
+  }
+
+  function nameOf(commitmentId: number): string {
+    return commitments.find((candidate) => candidate.id === commitmentId)?.name ?? "Compromisso";
+  }
 
   const signature = signatureOf(initialBlocks);
   if (syncedFrom !== signature) {
@@ -89,11 +99,16 @@ export function useAllocation({
     );
   }
 
-  async function rearrange(target: PlacedBlock, plan: RearrangePlan, write: typeof persistMove) {
+  async function rearrange(
+    target: PlacedBlock,
+    plan: RearrangePlan,
+    write: typeof persistMove,
+    announce: (name: string, placement: Placement) => string,
+  ) {
     setError(null);
 
     if (!plan.ok) {
-      setError(REFUSAL[plan.reason]);
+      refuse(plan.reason);
       return;
     }
 
@@ -107,6 +122,8 @@ export function useAllocation({
       () => replace(target, after),
       () => (target.id === null ? NOOP() : write(target.id, after)),
     );
+
+    setAnnouncement(announce(nameOf(target.commitmentId), after));
   }
 
   async function place(target: DropTarget) {
@@ -125,7 +142,7 @@ export function useAllocation({
     });
 
     if (!plan.ok) {
-      setError(REFUSAL[plan.reason]);
+      refuse(plan.reason);
       return;
     }
 
@@ -165,17 +182,19 @@ export function useAllocation({
     blocks,
     saving,
     error,
+    announcement,
     allocate: place,
     move: (target: PlacedBlock, to: { weekday: number; startHour: number }) =>
-      rearrange(target, planMove(target, to, blocks), persistMove),
+      rearrange(target, planMove(target, to, blocks), persistMove, announceMove),
     resize: (target: PlacedBlock, endHour: number) =>
-      rearrange(target, planResize(target, endHour, blocks), persistResize),
+      rearrange(target, planResize(target, endHour, blocks), persistResize, announceResize),
     remove: async (target: PlacedBlock) => {
       setError(null);
       await persist(
         () => setBlocks((current) => current.filter((block) => block !== target)),
         () => (target.id === null ? NOOP() : persistRemove(target.id)),
       );
+      setAnnouncement(announceRemoval(nameOf(target.commitmentId), target));
     },
   };
 }

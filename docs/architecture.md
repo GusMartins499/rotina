@@ -75,6 +75,23 @@ transação da virada for escrita errada: a segunda inserção aborta.
 Os literais `6`, `23` e `17` aparecem nos dois lados porque SQL não importa
 constante de TypeScript. Ao mudar a faixa da grade, mude os dois.
 
+## Operação por teclado
+
+A grade é operável sem mouse (`GUIDELINES.md` § Accessibility). O movimento por
+teclado **não** usa o `KeyboardSensor` do `@dnd-kit/core`: o sensor rola o
+elemento à vista ao ativar, e esse scroll dessincroniza as coordenadas do
+`coordinateGetter` do retângulo dos droppables, fazendo o bloco ser solto de
+volta na posição de origem. Comprovado em e2e: com `scrollY = 0` o movimento
+funciona; com `scrollY = 30` ele é anulado.
+
+No lugar dele há um **cursor próprio** (`useKeyboardCursor`): `Space` pega o
+bloco, as setas movem o cursor em passos de célula, `Space` confirma e `Escape`
+cancela. O cursor é estado da aplicação, não geometria, por isso é imune a
+scroll. `Shift` + setas redimensionam e `Delete` remove.
+
+Mouse e teclado convergem nas mesmas funções de domínio e nas mesmas Server
+Actions — não há um segundo caminho de validação ou de escrita.
+
 ## Migrations
 
 Geradas por `drizzle-kit generate` a partir do `schema.ts` e aplicadas pelo

@@ -1,32 +1,44 @@
 "use client";
 
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import { useRef, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { FIRST_HOUR, LAST_HOUR, WEEKDAY_LABELS, hourLabel, hoursOfDay } from "../../domain/hours";
+import { WEEKDAY_NAMES } from "../../domain/announce";
 import type { Commitment } from "../../repository/schema";
 import type { PlacedBlock } from "./useAllocation";
+import { useKeyboardCursor, type Cursor } from "./useKeyboardCursor";
 
 type Props = {
   blocks: PlacedBlock[];
   commitments: Commitment[];
   onResize?: (block: PlacedBlock, endHour: number) => void;
+  onRemove?: (block: PlacedBlock) => void;
+  onMove?: (block: PlacedBlock, to: { weekday: number; startHour: number }) => void;
   onFocusWeekday?: (weekday: number) => void;
 };
-
-const WEEKDAY_NAMES = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"];
 
 function rowOf(hour: number): number {
   return hour - FIRST_HOUR + 1;
 }
 
-function Slot({ weekday, hour }: { weekday: number; hour: number }) {
+function Slot({
+  weekday,
+  hour,
+  cursor,
+}: {
+  weekday: number;
+  hour: number;
+  cursor: Cursor | null;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: `slot-${weekday}-${hour}` });
+  const targeted = cursor !== null && cursor.weekday === weekday && cursor.startHour === hour;
 
   return (
     <div
       ref={setNodeRef}
       data-testid={`slot-${weekday}-${hour}`}
-      data-over={isOver ? "true" : undefined}
+      data-over={isOver || targeted ? "true" : undefined}
+      data-cursor={targeted ? "true" : undefined}
       className="slot"
       style={{ gridRow: `${rowOf(hour)} / ${rowOf(hour) + 1}` }}
     />
@@ -37,10 +49,14 @@ function Block({
   block,
   commitment,
   onResize,
+  onRemove,
+  keyboard,
 }: {
   block: PlacedBlock;
   commitment: Commitment | undefined;
   onResize?: (block: PlacedBlock, endHour: number) => void;
+  onRemove?: (block: PlacedBlock) => void;
+  keyboard: KeyboardControls;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `block-${block.weekday}-${block.startHour}`,
@@ -71,15 +87,67 @@ function Block({
     window.addEventListener("pointerup", finish);
   }
 
+  const grabbed = keyboard.cursor !== null && keyboard.cursor.id === block.id;
+
+  function handleKeyDown(event: ReactKeyboardEvent) {
+    if (event.key === "Delete" || event.key === "Backspace") {
+      event.preventDefault();
+      onRemove?.(block);
+      return;
+    }
+
+    if (event.shiftKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+      event.preventDefault();
+      event.stopPropagation();
+      onResize?.(block, block.endHour + (event.key === "ArrowDown" ? 1 : -1));
+      return;
+    }
+
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+      keyboard.toggle(block);
+      return;
+    }
+
+    if (!grabbed) {
+      return;
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      keyboard.release();
+      return;
+    }
+
+    const nudges: Record<string, [number, number]> = {
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1],
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+    };
+    const nudge = nudges[event.key];
+
+    if (nudge !== undefined) {
+      event.preventDefault();
+      event.stopPropagation();
+      keyboard.nudge(nudge[0], nudge[1]);
+    }
+  }
+
   return (
     <div
       ref={(node) => {
         setNodeRef(node);
         element.current = node;
       }}
+      onKeyDownCapture={handleKeyDown}
       {...listeners}
       {...attributes}
       data-testid={`block-${block.weekday}-${block.startHour}`}
+      data-grabbed={grabbed ? "true" : undefined}
+      aria-grabbed={grabbed}
       className="block"
       aria-label={`${commitment?.name ?? "Compromisso"}, ${WEEKDAY_NAMES[block.weekday]}, ${hourLabel(block.startHour)} às ${hourLabel(block.endHour)}`}
       style={{
@@ -98,7 +166,37 @@ function Block({
   );
 }
 
-export function WeekGrid({ blocks, commitments, onResize, onFocusWeekday }: Props) {
+type KeyboardControls = {
+  cursor: Cursor | null;
+  toggle: (block: PlacedBlock) => void;
+  release: () => void;
+  nudge: (weekdays: number, hours: number) => void;
+};
+
+export function WeekGrid({
+  blocks,
+  commitments,
+  onResize,
+  onRemove,
+  onMove,
+  onFocusWeekday,
+}: Props) {
+  const { cursor, grab, release, nudge } = useKeyboardCursor();
+  const keyboard: KeyboardControls = {
+    cursor,
+    release,
+    nudge,
+    toggle: (block) => {
+      if (cursor === null) {
+        grab(block);
+        return;
+      }
+      release();
+      if (cursor.weekday !== block.weekday || cursor.startHour !== block.startHour) {
+        onMove?.(block, { weekday: cursor.weekday, startHour: cursor.startHour });
+      }
+    },
+  };
   const hours = hoursOfDay();
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
 
@@ -127,16 +225,19 @@ export function WeekGrid({ blocks, commitments, onResize, onFocusWeekday }: Prop
           </div>
           <div className="day-slots">
             {hours.map((hour) => (
-              <Slot key={hour} weekday={weekday} hour={hour} />
+              <Slot key={hour} weekday={weekday} hour={hour} cursor={cursor} />
             ))}
             {blocks
               .filter((block) => block.weekday === weekday)
+              .sort((a, b) => a.startHour - b.startHour)
               .map((block) => (
                 <Block
                   key={`${block.weekday}-${block.startHour}`}
                   block={block}
                   commitment={byId.get(block.commitmentId)}
                   onResize={onResize}
+                  onRemove={onRemove}
+                  keyboard={keyboard}
                 />
               ))}
           </div>
