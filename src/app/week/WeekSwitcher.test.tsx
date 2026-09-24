@@ -8,7 +8,7 @@ describe("week switcher", () => {
 
     expect(screen.getByRole("link", { name: /próxima semana/i })).toHaveAttribute(
       "href",
-      "/?semana=proxima",
+      "/?week=next",
     );
   });
 

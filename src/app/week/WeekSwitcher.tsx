@@ -11,7 +11,7 @@ export function WeekSwitcher({ focus }: Props) {
         {focus === "next" ? "Próxima semana" : "Semana atual"}
       </span>
       {focus === "current" ? (
-        <Link href="/?semana=proxima">Configurar próxima semana</Link>
+        <Link href="/?week=next">Configurar próxima semana</Link>
       ) : (
         <Link href="/">Voltar à semana atual</Link>
       )}
