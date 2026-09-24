@@ -10,6 +10,8 @@ import {
 } from "@dnd-kit/core";
 import type { Commitment } from "../../repository/schema";
 import { withinGrid } from "./collision";
+import { useNow } from "./NowProvider";
+import { useSavingToast } from "./useSavingToast";
 import { CommitmentDrawer } from "./CommitmentDrawer";
 import { WeekGrid } from "./WeekGrid";
 import { WeeklyLoadPanel } from "./WeeklyLoadPanel";
@@ -27,6 +29,7 @@ type Focus = "current" | "next";
 
 type Props = {
   weekLabel: string;
+  focusedMonday: string;
   focus: Focus;
   saveTemplate: (focus: Focus) => Promise<WriteResult>;
   applyTemplate: (focus: Focus) => Promise<WriteResult>;
@@ -50,6 +53,7 @@ function parseCommitment(id: string): number | null {
 
 export function WeekBoard({
   weekLabel,
+  focusedMonday,
   focus,
   commitments,
   initialBlocks,
@@ -68,6 +72,8 @@ export function WeekBoard({
     resize,
     remove,
   });
+  const now = useNow();
+  const toast = useSavingToast(week.saving, week.error);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   function handleDragEnd(event: DragEndEvent) {
@@ -100,9 +106,6 @@ export function WeekBoard({
     >
       <header className="week-header">
         <h1>{weekLabel}</h1>
-        <p aria-live="polite" className="saving">
-          {week.saving ? "Salvando…" : ""}
-        </p>
         <p
           aria-live="polite"
           role="status"
@@ -111,11 +114,6 @@ export function WeekBoard({
         >
           {week.announcement}
         </p>
-        {week.error !== null && (
-          <p role="alert" data-testid="board-error">
-            {week.error}
-          </p>
-        )}
       </header>
 
       <div className="board">
@@ -125,6 +123,8 @@ export function WeekBoard({
           onResize={(block, endHour) => void week.resize(block, endHour)}
           onRemove={(block) => void week.remove(block)}
           onMove={(block, to) => void week.move(block, to)}
+          now={now}
+          focusedMonday={focusedMonday}
         />
         <div className="side">
           <CommitmentDrawer commitments={commitments} />
@@ -136,6 +136,21 @@ export function WeekBoard({
           />
         </div>
       </div>
+      {toast !== null && (
+        <output
+          aria-live="polite"
+          data-testid="saving-toast"
+          data-state={toast.state}
+          className="toast"
+        >
+          {toast.message}
+        </output>
+      )}
+      {week.error !== null && (
+        <p role="alert" data-testid="board-error" className="visually-hidden">
+          {week.error}
+        </p>
+      )}
     </DndContext>
   );
 }

@@ -48,6 +48,7 @@ export default async function Page({
       <WeekSwitcher focus={focus} today={today} />
       <WeekBoard
         weekLabel={weekLabel(week.mondayDate)}
+        focusedMonday={week.mondayDate}
         focus={focus}
         commitments={listCommitments(db)}
         initialBlocks={blocks}

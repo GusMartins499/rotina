@@ -300,3 +300,49 @@ test("the drawer shows no weekday and no remainder", async ({ page }) => {
   await expect(drawer).not.toContainText("faltam");
   await expect(drawer).not.toContainText("SEGUNDA");
 });
+
+test("shows a toast while a change is saved", async ({ page }) => {
+  await page.goto("/");
+
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-10"));
+
+  await expect(page.getByTestId("saving-toast")).toBeVisible();
+  await expect(page.getByTestId("saving-toast")).toHaveAttribute("data-state", "saved");
+});
+
+test("previews the candidate size while the edge is dragged", async ({ page }) => {
+  await page.goto("/");
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-6"));
+  await page.waitForTimeout(800);
+
+  const handle = await page.getByTestId("resize-5-6").boundingBox();
+  if (handle === null) {
+    throw new Error("resize handle is not visible");
+  }
+
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + 2 * 36, { steps: 8 });
+
+  await expect(page.getByTestId("resize-preview")).toBeVisible();
+  await expect(page.getByTestId("resize-preview")).toContainText("06:00 às 09:00");
+
+  await page.mouse.up();
+  await expect(page.getByTestId("resize-preview")).toHaveCount(0);
+});
+
+test("marks the column of the current weekday", async ({ page }) => {
+  await page.goto("/");
+
+  const weekday = (new Date().getDay() + 6) % 7;
+  await expect(page.locator(`.day-column[data-today="true"]`)).toHaveCount(1);
+  await expect(page.getByTestId(`weekday-head-${weekday}`)).toBeVisible();
+  await expect(page.getByTestId("now-line")).toBeVisible();
+});
+
+test("marks no column while the next week is in focus", async ({ page }) => {
+  await page.goto("/?week=next");
+
+  await expect(page.locator(`.day-column[data-today="true"]`)).toHaveCount(0);
+  await expect(page.getByTestId("now-line")).toHaveCount(0);
+});

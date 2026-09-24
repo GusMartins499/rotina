@@ -1,9 +1,16 @@
 "use client";
 
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { useRef, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { FIRST_HOUR, LAST_HOUR, WEEKDAY_LABELS, hourLabel, hoursOfDay } from "../../domain/hours";
 import { WEEKDAY_NAMES } from "../../domain/announce";
+import { planResize } from "../../domain/rearrange";
+import { nowMarker } from "../../domain/now";
 import type { Commitment } from "../../repository/schema";
 import type { PlacedBlock } from "./useAllocation";
 import { useKeyboardCursor, type Cursor } from "./useKeyboardCursor";
@@ -14,6 +21,15 @@ type Props = {
   onResize?: (block: PlacedBlock, endHour: number) => void;
   onRemove?: (block: PlacedBlock) => void;
   onMove?: (block: PlacedBlock, to: { weekday: number; startHour: number }) => void;
+  now?: string | null;
+  focusedMonday?: string;
+};
+
+type Preview = {
+  weekday: number;
+  startHour: number;
+  endHour: number;
+  refused: boolean;
 };
 
 function rowOf(hour: number): number {
@@ -50,12 +66,16 @@ function Block({
   onResize,
   onRemove,
   keyboard,
+  onPreview,
+  siblings,
 }: {
   block: PlacedBlock;
   commitment: Commitment | undefined;
   onResize?: (block: PlacedBlock, endHour: number) => void;
   onRemove?: (block: PlacedBlock) => void;
   keyboard: KeyboardControls;
+  onPreview: (preview: Preview | null) => void;
+  siblings: PlacedBlock[];
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `block-${block.weekday}-${block.startHour}`,
@@ -74,16 +94,50 @@ function Block({
 
     const hourHeight = node.getBoundingClientRect().height / (block.endHour - block.startHour);
     const originY = event.clientY;
+    let candidate = block.endHour;
 
-    function finish(move: PointerEvent) {
-      window.removeEventListener("pointerup", finish);
-      const delta = Math.round((move.clientY - originY) / hourHeight);
-      if (delta !== 0) {
-        onResize?.(block, block.endHour + delta);
+    function candidateFrom(clientY: number): number {
+      return block.endHour + Math.round((clientY - originY) / hourHeight);
+    }
+
+    function move(event: PointerEvent) {
+      candidate = candidateFrom(event.clientY);
+      onPreview({
+        weekday: block.weekday,
+        startHour: block.startHour,
+        endHour: candidate,
+        refused: !planResize(block, candidate, siblings).ok,
+      });
+    }
+
+    function cancel() {
+      stop();
+      onPreview(null);
+    }
+
+    function finish() {
+      stop();
+      onPreview(null);
+      if (candidate !== block.endHour) {
+        onResize?.(block, candidate);
       }
     }
 
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        cancel();
+      }
+    }
+
+    function stop() {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("keydown", onKey);
+    }
+
+    window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", finish);
+    window.addEventListener("keydown", onKey);
   }
 
   const grabbed = keyboard.cursor !== null && keyboard.cursor.id === block.id;
@@ -178,8 +232,11 @@ export function WeekGrid({
   onResize,
   onRemove,
   onMove,
+  now = null,
+  focusedMonday = "",
 }: Props) {
   const { cursor, grab, release, nudge } = useKeyboardCursor();
+  const [preview, setPreview] = useState<Preview | null>(null);
   const keyboard: KeyboardControls = {
     cursor,
     release,
@@ -196,6 +253,7 @@ export function WeekGrid({
     },
   };
   const hours = hoursOfDay();
+  const marker = now === null ? null : nowMarker(now, focusedMonday);
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
 
   return (
@@ -213,14 +271,39 @@ export function WeekGrid({
       </div>
 
       {WEEKDAY_LABELS.map((label, weekday) => (
-        <div key={label} className="day-column">
+        <div
+          key={label}
+          className="day-column"
+          data-today={marker?.weekday === weekday ? "true" : undefined}
+        >
           <div className="weekday-head" data-testid={`weekday-head-${weekday}`}>
             {label}
           </div>
           <div className="day-slots">
+            {marker?.weekday === weekday && (
+              <div
+                data-testid="now-line"
+                className="now-line"
+                style={{ top: `calc(${marker.offsetHours} * var(--hour-height))` }}
+              />
+            )}
             {hours.map((hour) => (
               <Slot key={hour} weekday={weekday} hour={hour} cursor={cursor} />
             ))}
+            {preview !== null && preview.weekday === weekday && (
+              <div
+                data-testid="resize-preview"
+                data-refused={preview.refused ? "true" : "false"}
+                className="resize-preview"
+                style={{
+                  gridRow: `${rowOf(preview.startHour)} / ${rowOf(Math.max(preview.endHour, preview.startHour + 1))}`,
+                }}
+              >
+                <span>
+                  {hourLabel(preview.startHour)} às {hourLabel(preview.endHour)}
+                </span>
+              </div>
+            )}
             {blocks
               .filter((block) => block.weekday === weekday)
               .sort((a, b) => a.startHour - b.startHour)
@@ -232,6 +315,8 @@ export function WeekGrid({
                   onResize={onResize}
                   onRemove={onRemove}
                   keyboard={keyboard}
+                  onPreview={setPreview}
+                  siblings={blocks}
                 />
               ))}
           </div>
