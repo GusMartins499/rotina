@@ -15,7 +15,7 @@ const FAILURE = "Não foi possível salvar. Tente de novo.";
 function run(operation: () => void): SubmitResult {
   try {
     operation();
-    revalidatePath("/compromissos");
+    revalidatePath("/commitments");
     return { ok: true };
   } catch (cause) {
     console.error("commitment operation failed", cause);

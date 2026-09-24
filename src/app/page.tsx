@@ -4,15 +4,15 @@ import { listCommitments } from "../repository/commitments";
 import { getDatabase } from "../repository/db";
 import { applyRollover } from "../repository/rollover";
 import { ensureWeekPair, listBlocksOfWeek } from "../repository/weeks";
-import { WeekBoard } from "./semana/WeekBoard";
-import { WeekSwitcher } from "./semana/WeekSwitcher";
+import { WeekBoard } from "./week/WeekBoard";
+import { WeekSwitcher } from "./week/WeekSwitcher";
 import {
   allocateBlockAction,
   applyTemplateAction,
   moveBlockAction,
   removeBlockAction,
   saveTemplateAction,
-} from "./semana/actions";
+} from "./week/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +28,9 @@ function weekLabel(mondayDate: string): string {
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ semana?: string }>;
+  searchParams: Promise<{ week?: string }>;
 }) {
-  const focus = (await searchParams).semana === "proxima" ? "next" : "current";
+  const focus = (await searchParams).week === "next" ? "next" : "current";
 
   const db = getDatabase();
   const today = new Date().toISOString().slice(0, 10);
@@ -43,7 +43,7 @@ export default async function Page({
   return (
     <>
       <nav>
-        <Link href="/compromissos">Gerenciar compromissos</Link>
+        <Link href="/commitments">Gerenciar compromissos</Link>
       </nav>
       <WeekSwitcher focus={focus} />
       <WeekBoard

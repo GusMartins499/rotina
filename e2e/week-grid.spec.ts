@@ -117,7 +117,7 @@ test("saves the current week as the base routine and applies it to the next one"
   await page.getByRole("button", { name: /salvar como rotina base/i }).click();
   await page.waitForTimeout(800);
 
-  await page.goto("/?semana=proxima");
+  await page.goto("/?week=next");
   const apply = page.getByRole("button", { name: /aplicar rotina base/i });
   await expect(apply).toBeEnabled();
   await apply.click();
@@ -129,7 +129,7 @@ test("saves the current week as the base routine and applies it to the next one"
 });
 
 test("keeps the two weeks independent", async ({ page }) => {
-  await page.goto("/?semana=proxima");
+  await page.goto("/?week=next");
   await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-20"));
   await expect(page.getByTestId("block-5-20")).toBeVisible();
 
@@ -240,4 +240,19 @@ test("resolves an imprecise drop inside the grid to the closest slot", async ({ 
   await page.mouse.up();
 
   await expect(page.locator('[data-testid^="block-5-"]')).toHaveCount(1);
+});
+
+test("serves the commitments screen from an english route", async ({ page }) => {
+  const response = await page.goto("/commitments");
+
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole("heading", { name: "Compromissos" })).toBeVisible();
+});
+
+test("keeps the visible labels in portuguese", async ({ page }) => {
+  await page.goto("/?week=next");
+
+  await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
+  await expect(page.getByTestId("weekday-head-0")).toHaveText("SEGUNDA");
+  await expect(page.getByText(/Semana do dia/)).toBeVisible();
 });
