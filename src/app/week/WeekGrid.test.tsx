@@ -37,15 +37,15 @@ describe("week grid", () => {
       { id: 1, commitmentId: 1, weekday: 0, startMinute: 120, endMinute: 420 },
     ]);
 
-    expect(screen.getByTestId("block-0-120")).toHaveStyle({ gridRow: "3 / 8" });
+    expect(screen.getByTestId("block-0-120")).toHaveStyle({ gridRow: "5 / 15" });
   });
 
-  it("renders a one hour block spanning a single row", () => {
+  it("renders a one hour block spanning two rows", () => {
     renderGrid([
       { id: 2, commitmentId: 2, weekday: 1, startMinute: 60, endMinute: 120 },
     ]);
 
-    expect(screen.getByTestId("block-1-60")).toHaveStyle({ gridRow: "2 / 3" });
+    expect(screen.getByTestId("block-1-60")).toHaveStyle({ gridRow: "3 / 5" });
   });
 
   it("paints each block with the color of its commitment", () => {
@@ -67,9 +67,9 @@ describe("week grid", () => {
     );
   });
 
-  it("offers a drop target for every weekday and hour", () => {
+  it("offers a drop target for every weekday and half hour", () => {
     renderGrid();
 
-    expect(screen.getAllByTestId(/^slot-/)).toHaveLength(7 * 17);
+    expect(screen.getAllByTestId(/^slot-/)).toHaveLength(7 * 34);
   });
 });

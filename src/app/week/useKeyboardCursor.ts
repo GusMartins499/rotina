@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MINUTES_PER_DAY, MINUTES_PER_HOUR } from "../../domain/time";
+import { MINUTES_PER_DAY, STEP_MINUTES } from "../../domain/time";
 import type { PlacedBlock } from "./useAllocation";
 
 export type Cursor = {
@@ -22,7 +22,7 @@ export function useKeyboardCursor() {
     grab: (block: PlacedBlock) =>
       setCursor({ id: block.id, weekday: block.weekday, startMinute: block.startMinute }),
     release: () => setCursor(null),
-    nudge: (weekdays: number, hours: number) =>
+    nudge: (weekdays: number, steps: number) =>
       setCursor((current) =>
         current === null
           ? null
@@ -30,9 +30,9 @@ export function useKeyboardCursor() {
               ...current,
               weekday: clamp(current.weekday + weekdays, 0, 6),
               startMinute: clamp(
-                current.startMinute + hours * MINUTES_PER_HOUR,
+                current.startMinute + steps * STEP_MINUTES,
                 0,
-                MINUTES_PER_DAY - MINUTES_PER_HOUR,
+                MINUTES_PER_DAY - STEP_MINUTES,
               ),
             },
       ),

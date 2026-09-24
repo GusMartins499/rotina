@@ -68,14 +68,14 @@ describe("keyboard operable grid", () => {
     );
   });
 
-  it("resizes a focused block with Shift and the arrow keys", async () => {
+  it("resizes a focused block by one step with Shift and the arrow keys", async () => {
     const onResize = vi.fn();
     renderGrid({ onResize });
 
     screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard("{Shift>}{ArrowUp}{/Shift}");
 
-    expect(onResize).toHaveBeenCalledWith(blocks[0], 360);
+    expect(onResize).toHaveBeenCalledWith(blocks[0], 390);
   });
 
   it("grows a focused block with Shift and ArrowDown", async () => {
@@ -85,7 +85,7 @@ describe("keyboard operable grid", () => {
     screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard("{Shift>}{ArrowDown}{/Shift}");
 
-    expect(onResize).toHaveBeenCalledWith(blocks[0], 480);
+    expect(onResize).toHaveBeenCalledWith(blocks[0], 450);
   });
 
   it("removes a focused block with Delete", async () => {

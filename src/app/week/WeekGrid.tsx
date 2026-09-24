@@ -13,7 +13,8 @@ import {
   STEP_MINUTES,
   WEEKDAY_LABELS,
   timeLabel,
-  wholeHoursOfDay,
+  isWholeHour,
+  stepsOfDay,
 } from "../../domain/time";
 import { WEEKDAY_NAMES } from "../../domain/announce";
 import { planResize } from "../../domain/rearrange";
@@ -40,29 +41,30 @@ type Preview = {
 };
 
 function rowOf(minute: number): number {
-  return minute / MINUTES_PER_HOUR + 1;
+  return minute / STEP_MINUTES + 1;
 }
 
 function Slot({
   weekday,
-  hour,
+  minute,
   cursor,
 }: {
   weekday: number;
-  hour: number;
+  minute: number;
   cursor: Cursor | null;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `slot-${weekday}-${hour}` });
-  const targeted = cursor !== null && cursor.weekday === weekday && cursor.startMinute === hour;
+  const { setNodeRef, isOver } = useDroppable({ id: `slot-${weekday}-${minute}` });
+  const targeted = cursor !== null && cursor.weekday === weekday && cursor.startMinute === minute;
 
   return (
     <div
       ref={setNodeRef}
-      data-testid={`slot-${weekday}-${hour}`}
+      data-testid={`slot-${weekday}-${minute}`}
+      data-half={isWholeHour(minute) ? undefined : "true"}
       data-over={isOver || targeted ? "true" : undefined}
       data-cursor={targeted ? "true" : undefined}
       className="slot"
-      style={{ gridRow: `${rowOf(hour)} / ${rowOf(hour) + 1}` }}
+      style={{ gridRow: `${rowOf(minute)} / ${rowOf(minute) + 1}` }}
     />
   );
 }
@@ -99,14 +101,14 @@ function Block({
       return;
     }
 
-    const hourHeight =
+    const stepHeight =
       (node.getBoundingClientRect().height / (block.endMinute - block.startMinute)) *
-      MINUTES_PER_HOUR;
+      STEP_MINUTES;
     const originY = event.clientY;
     let candidate = block.endMinute;
 
     function candidateFrom(clientY: number): number {
-      return block.endMinute + Math.round((clientY - originY) / hourHeight) * MINUTES_PER_HOUR;
+      return block.endMinute + Math.round((clientY - originY) / stepHeight) * STEP_MINUTES;
     }
 
     function move(event: PointerEvent) {
@@ -163,7 +165,7 @@ function Block({
       event.stopPropagation();
       onResize?.(
         block,
-        block.endMinute + (event.key === "ArrowDown" ? MINUTES_PER_HOUR : -MINUTES_PER_HOUR),
+        block.endMinute + (event.key === "ArrowDown" ? STEP_MINUTES : -STEP_MINUTES),
       );
       return;
     }
@@ -264,7 +266,7 @@ export function WeekGrid({
       }
     },
   };
-  const hours = wholeHoursOfDay();
+  const steps = stepsOfDay();
   const marker = now === null ? null : nowMarker(now, focusedMonday);
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
 
@@ -273,9 +275,13 @@ export function WeekGrid({
       <div className="hour-column">
         <div className="weekday-head" aria-hidden="true" />
         <div className="hour-labels">
-          {hours.map((hour) => (
-            <span key={hour} data-testid={`hour-label-${hour}`} className="hour-label">
-              {timeLabel(hour)}
+          {steps.map((minute) => (
+            <span
+              key={minute}
+              data-testid={isWholeHour(minute) ? `hour-label-${minute}` : undefined}
+              className={isWholeHour(minute) ? "hour-label" : "hour-label hour-label-half"}
+            >
+              {isWholeHour(minute) ? timeLabel(minute) : ""}
             </span>
           ))}
           <span className="hour-label hour-label-end">{timeLabel(MINUTES_PER_DAY)}</span>
@@ -296,11 +302,11 @@ export function WeekGrid({
               <div
                 data-testid="now-line"
                 className="now-line"
-                style={{ top: `calc(${marker.offsetMinutes / MINUTES_PER_HOUR} * var(--hour-height))` }}
+                style={{ top: `calc(${marker.offsetMinutes / STEP_MINUTES} * var(--step-height))` }}
               />
             )}
-            {hours.map((hour) => (
-              <Slot key={hour} weekday={weekday} hour={hour} cursor={cursor} />
+            {steps.map((minute) => (
+              <Slot key={minute} weekday={weekday} minute={minute} cursor={cursor} />
             ))}
             {preview !== null && preview.weekday === weekday && (
               <div

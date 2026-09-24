@@ -13,7 +13,7 @@ describe("edit commitment button", () => {
     await userEvent.click(screen.getByRole("button", { name: /editar/i }));
 
     expect(screen.getByLabelText(/nome/i)).toHaveValue("TRABALHO");
-    expect(screen.getByLabelText(/carga/i)).toHaveValue("8");
+    expect(screen.getByLabelText(/carga/i)).toHaveValue("8h");
   });
 
   it("saves the edited values", async () => {
