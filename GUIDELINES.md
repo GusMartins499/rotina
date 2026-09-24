@@ -81,8 +81,33 @@
 - Faça mudanças de schema **aditivas primeiro**: adicione antes de remover.
 - Versione a migration em arquivo e aplique no boot do container, no **mesmo PR**
   da feature que a exige.
+- Gere migrations com `drizzle-kit generate` a partir do `schema.ts` e aplique
+  com o `migrate()` de `drizzle-orm/better-sqlite3/migrator`. **Não escreva um
+  runner próprio**: o `migrate()` mantém a tabela `__drizzle_migrations` e por
+  isso é idempotente — um runner caseiro reaplica tudo e quebra no segundo boot.
+- Declare constraints (`CHECK`, `UNIQUE`, FK) no `schema.ts` via `check()` e
+  derivados, nunca escrevendo o SQL à mão. SQL manual sai do schema e diverge.
+- Crie SQL que o `drizzle-kit` não gera (triggers, índices parciais) como
+  migration custom: `drizzle-kit generate --custom --name <nome>`. Ela entra no
+  mesmo journal e no mesmo controle de idempotência.
 - Nunca execute alteração destrutiva sem que ela seja a própria intenção do card.
   Não há backup: o que se apaga, se perde.
+
+## Invariantes em duas camadas
+
+Alguns invariantes existem tanto em `domain/` quanto no banco. Isso é
+deliberado — o banco é a última linha de defesa, que sobrevive a um caminho de
+código que esqueceu de validar — mas é invisível se não for registrado.
+
+- Documente todo invariante que vive em duas camadas em
+  [docs/architecture.md](docs/architecture.md), dizendo onde cada metade mora.
+  Um invariante só no banco é uma armadilha para quem lê o TypeScript.
+- Derive as duas metades da mesma condição lógica. Se a expressão em SQL e a
+  função em TypeScript divergirem, a UI aceita o que o banco recusa.
+- Nomeie na mensagem do `RAISE(ABORT, ...)` a função de domínio equivalente, para
+  que o erro de banco aponte para o código que deveria tê-lo prevenido.
+- Trate o erro do banco na borda: o usuário recebe mensagem, nunca uma exceção
+  de SQLite crua.
 
 ## Accessibility
 
