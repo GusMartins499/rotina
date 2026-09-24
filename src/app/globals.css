@@ -1,5 +1,6 @@
 :root {
   --hour-height: 34px;
+  --hour-label-height: 14px;
   --border: #d0d7de;
   --surface: #ffffff;
   --ground: #f6f8fa;
@@ -74,25 +75,27 @@ nav {
 
 .hour-labels {
   display: grid;
-  grid-template-rows: repeat(17, var(--hour-height));
+  grid-template-rows: repeat(17, var(--hour-height)) var(--hour-label-height);
   padding-right: 6px;
 }
 
 .hour-label {
   font-size: 0.7rem;
+  line-height: var(--hour-label-height);
   color: var(--muted);
-  transform: translateY(-0.5em);
   text-align: right;
   padding-left: 6px;
+  transform: translateY(calc(var(--hour-label-height) / -2));
 }
 
 .hour-label-end {
-  height: 0;
+  transform: none;
+  align-self: start;
 }
 
 .day-slots {
   display: grid;
-  grid-template-rows: repeat(17, var(--hour-height));
+  grid-template-rows: repeat(17, var(--hour-height)) var(--hour-label-height);
   grid-template-columns: 1fr;
   position: relative;
 }
