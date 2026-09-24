@@ -1,0 +1,284 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "a1ea44c6-f531-416c-bd1d-d9092c77ff5c",
+  "prevId": "932b0d87-fda7-4d45-87a2-faef8a5bdaf8",
+  "tables": {
+    "blocks": {
+      "name": "blocks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "week_id": {
+          "name": "week_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "commitment_id": {
+          "name": "commitment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weekday": {
+          "name": "weekday",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_minute": {
+          "name": "start_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_minute": {
+          "name": "end_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "blocks_week_id_weeks_id_fk": {
+          "name": "blocks_week_id_weeks_id_fk",
+          "tableFrom": "blocks",
+          "tableTo": "weeks",
+          "columnsFrom": [
+            "week_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "blocks_commitment_id_commitments_id_fk": {
+          "name": "blocks_commitment_id_commitments_id_fk",
+          "tableFrom": "blocks",
+          "tableTo": "commitments",
+          "columnsFrom": [
+            "commitment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "blocks_weekday_range": {
+          "name": "blocks_weekday_range",
+          "value": "\"blocks\".\"weekday\" >= 0 AND \"blocks\".\"weekday\" <= 6"
+        },
+        "blocks_within_day": {
+          "name": "blocks_within_day",
+          "value": "\"blocks\".\"start_minute\" >= 0 AND \"blocks\".\"end_minute\" <= 1020"
+        },
+        "blocks_positive_duration": {
+          "name": "blocks_positive_duration",
+          "value": "\"blocks\".\"end_minute\" > \"blocks\".\"start_minute\""
+        }
+      }
+    },
+    "commitments": {
+      "name": "commitments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "color": {
+          "name": "color",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "daily_minutes": {
+          "name": "daily_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(current_timestamp)"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "commitments_daily_hours_range": {
+          "name": "commitments_daily_hours_range",
+          "value": "\"commitments\".\"daily_minutes\" IS NULL OR (\"commitments\".\"daily_minutes\" >= 30 AND \"commitments\".\"daily_minutes\" <= 1020)"
+        }
+      }
+    },
+    "template_blocks": {
+      "name": "template_blocks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "commitment_id": {
+          "name": "commitment_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "weekday": {
+          "name": "weekday",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "start_minute": {
+          "name": "start_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "end_minute": {
+          "name": "end_minute",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "template_blocks_commitment_id_commitments_id_fk": {
+          "name": "template_blocks_commitment_id_commitments_id_fk",
+          "tableFrom": "template_blocks",
+          "tableTo": "commitments",
+          "columnsFrom": [
+            "commitment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "template_weekday_range": {
+          "name": "template_weekday_range",
+          "value": "\"template_blocks\".\"weekday\" >= 0 AND \"template_blocks\".\"weekday\" <= 6"
+        },
+        "template_within_day": {
+          "name": "template_within_day",
+          "value": "\"template_blocks\".\"start_minute\" >= 0 AND \"template_blocks\".\"end_minute\" <= 1020"
+        },
+        "template_positive_duration": {
+          "name": "template_positive_duration",
+          "value": "\"template_blocks\".\"end_minute\" > \"template_blocks\".\"start_minute\""
+        }
+      }
+    },
+    "weeks": {
+      "name": "weeks",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "monday_date": {
+          "name": "monday_date",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "weeks_monday_date_unique": {
+          "name": "weeks_monday_date_unique",
+          "columns": [
+            "monday_date"
+          ],
+          "isUnique": true
+        },
+        "weeks_kind_unique": {
+          "name": "weeks_kind_unique",
+          "columns": [
+            "kind"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "weeks_kind_values": {
+          "name": "weeks_kind_values",
+          "value": "\"weeks\".\"kind\" IN ('current', 'next')"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

@@ -7,15 +7,15 @@ export const commitments = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
     color: text("color").notNull(),
-    dailyHours: integer("daily_hours"),
+    dailyMinutes: integer("daily_minutes"),
     createdAt: text("created_at")
       .notNull()
       .default(sql`(current_timestamp)`),
   },
   (table) => [
     check(
-      "commitments_daily_hours_range",
-      sql`${table.dailyHours} IS NULL OR (${table.dailyHours} >= 1 AND ${table.dailyHours} <= 17)`,
+      "commitments_daily_minutes_range",
+      sql`${table.dailyMinutes} IS NULL OR (${table.dailyMinutes} >= 30 AND ${table.dailyMinutes} <= 1020)`,
     ),
   ],
 );
@@ -43,13 +43,13 @@ export const blocks = sqliteTable(
       .notNull()
       .references(() => commitments.id, { onDelete: "cascade" }),
     weekday: integer("weekday").notNull(),
-    startHour: integer("start_hour").notNull(),
-    endHour: integer("end_hour").notNull(),
+    startMinute: integer("start_minute").notNull(),
+    endMinute: integer("end_minute").notNull(),
   },
   (table) => [
     check("blocks_weekday_range", sql`${table.weekday} >= 0 AND ${table.weekday} <= 6`),
-    check("blocks_within_day", sql`${table.startHour} >= 6 AND ${table.endHour} <= 23`),
-    check("blocks_positive_duration", sql`${table.endHour} > ${table.startHour}`),
+    check("blocks_within_day", sql`${table.startMinute} >= 0 AND ${table.endMinute} <= 1020`),
+    check("blocks_positive_duration", sql`${table.endMinute} > ${table.startMinute}`),
   ],
 );
 
@@ -65,13 +65,13 @@ export const templateBlocks = sqliteTable(
       .notNull()
       .references(() => commitments.id, { onDelete: "cascade" }),
     weekday: integer("weekday").notNull(),
-    startHour: integer("start_hour").notNull(),
-    endHour: integer("end_hour").notNull(),
+    startMinute: integer("start_minute").notNull(),
+    endMinute: integer("end_minute").notNull(),
   },
   (table) => [
     check("template_weekday_range", sql`${table.weekday} >= 0 AND ${table.weekday} <= 6`),
-    check("template_within_day", sql`${table.startHour} >= 6 AND ${table.endHour} <= 23`),
-    check("template_positive_duration", sql`${table.endHour} > ${table.startHour}`),
+    check("template_within_day", sql`${table.startMinute} >= 0 AND ${table.endMinute} <= 1020`),
+    check("template_positive_duration", sql`${table.endMinute} > ${table.startMinute}`),
   ],
 );
 

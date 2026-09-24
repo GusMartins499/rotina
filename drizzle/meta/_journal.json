@@ -29,6 +29,13 @@
       "when": 1790217582347,
       "tag": "0003_routine_template",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790217583347,
+      "tag": "0004_minutes",
+      "breakpoints": true
     }
   ]
 }
