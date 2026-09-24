@@ -149,13 +149,13 @@ test("moves a block with the keyboard and announces the result", async ({ page }
   await page.keyboard.press("Space");
 
   await expect(page.getByTestId("grid-announcement")).toContainText(
-    "movido para domingo, 16:00 às 17:00",
+    "movido para domingo, 15:30 às 16:00",
   );
-  await expect(page.getByTestId("block-6-600")).toBeVisible();
+  await expect(page.getByTestId("block-6-570")).toBeVisible();
 
   await page.waitForTimeout(800);
   await page.reload();
-  await expect(page.getByTestId("block-6-600")).toBeVisible();
+  await expect(page.getByTestId("block-6-570")).toBeVisible();
 });
 
 test("cancels a keyboard drag with Escape leaving the block untouched", async ({ page }) => {
@@ -183,7 +183,7 @@ test("resizes and removes a block with the keyboard, announcing both", async ({ 
   await page.keyboard.press("Shift+ArrowUp");
 
   await expect(page.getByTestId("grid-announcement")).toContainText(
-    "redimensionado para terça, 08:00 às 15:00",
+    "redimensionado para terça, 08:00 às 15:30",
   );
 
   await page.getByTestId("block-1-120").focus();
@@ -201,6 +201,7 @@ test("announces a refusal, not only a success", async ({ page }) => {
 
   await page.getByTestId("block-4-660").focus();
   await page.keyboard.press("Space");
+  await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("Space");
@@ -362,7 +363,7 @@ test("previews the candidate size while the edge is dragged", async ({ page }) =
   await page.mouse.move(handle.x + handle.width / 2, handle.y + 2 * 36, { steps: 8 });
 
   await expect(page.getByTestId("resize-preview")).toBeVisible();
-  await expect(page.getByTestId("resize-preview")).toContainText("06:00 às 09:00");
+  await expect(page.getByTestId("resize-preview")).toContainText("06:00 às 08:30");
 
   await page.mouse.up();
   await expect(page.getByTestId("resize-preview")).toHaveCount(0);
