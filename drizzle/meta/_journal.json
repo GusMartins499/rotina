@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1790208039361,
+      "tag": "0000_certain_hellfire_club",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790208045522,
+      "tag": "0001_block_overlap_guard",
+      "breakpoints": true
+    }
+  ]
+}

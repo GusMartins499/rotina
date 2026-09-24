@@ -9,9 +9,9 @@ WHEN EXISTS (
     AND start_hour < NEW.end_hour
 )
 BEGIN
-  SELECT RAISE(ABORT, 'block overlaps an existing block on this weekday');
+  SELECT RAISE(ABORT, 'block overlaps an existing block on this weekday — same rule as domain/overlaps');
 END;
-
+--> statement-breakpoint
 CREATE TRIGGER blocks_no_overlap_on_update
 BEFORE UPDATE ON blocks
 FOR EACH ROW
@@ -24,5 +24,5 @@ WHEN EXISTS (
     AND start_hour < NEW.end_hour
 )
 BEGIN
-  SELECT RAISE(ABORT, 'block overlaps an existing block on this weekday');
+  SELECT RAISE(ABORT, 'block overlaps an existing block on this weekday — same rule as domain/overlaps');
 END;
