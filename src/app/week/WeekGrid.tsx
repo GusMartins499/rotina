@@ -7,7 +7,14 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { FIRST_HOUR, LAST_HOUR, WEEKDAY_LABELS, hourLabel, hoursOfDay } from "../../domain/hours";
+import {
+  MINUTES_PER_DAY,
+  MINUTES_PER_HOUR,
+  STEP_MINUTES,
+  WEEKDAY_LABELS,
+  timeLabel,
+  wholeHoursOfDay,
+} from "../../domain/time";
 import { WEEKDAY_NAMES } from "../../domain/announce";
 import { planResize } from "../../domain/rearrange";
 import { nowMarker } from "../../domain/now";
@@ -18,22 +25,22 @@ import { useKeyboardCursor, type Cursor } from "./useKeyboardCursor";
 type Props = {
   blocks: PlacedBlock[];
   commitments: Commitment[];
-  onResize?: (block: PlacedBlock, endHour: number) => void;
+  onResize?: (block: PlacedBlock, endMinute: number) => void;
   onRemove?: (block: PlacedBlock) => void;
-  onMove?: (block: PlacedBlock, to: { weekday: number; startHour: number }) => void;
+  onMove?: (block: PlacedBlock, to: { weekday: number; startMinute: number }) => void;
   now?: string | null;
   focusedMonday?: string;
 };
 
 type Preview = {
   weekday: number;
-  startHour: number;
-  endHour: number;
+  startMinute: number;
+  endMinute: number;
   refused: boolean;
 };
 
-function rowOf(hour: number): number {
-  return hour - FIRST_HOUR + 1;
+function rowOf(minute: number): number {
+  return minute / MINUTES_PER_HOUR + 1;
 }
 
 function Slot({
@@ -46,7 +53,7 @@ function Slot({
   cursor: Cursor | null;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `slot-${weekday}-${hour}` });
-  const targeted = cursor !== null && cursor.weekday === weekday && cursor.startHour === hour;
+  const targeted = cursor !== null && cursor.weekday === weekday && cursor.startMinute === hour;
 
   return (
     <div
@@ -71,14 +78,14 @@ function Block({
 }: {
   block: PlacedBlock;
   commitment: Commitment | undefined;
-  onResize?: (block: PlacedBlock, endHour: number) => void;
+  onResize?: (block: PlacedBlock, endMinute: number) => void;
   onRemove?: (block: PlacedBlock) => void;
   keyboard: KeyboardControls;
   onPreview: (preview: Preview | null) => void;
   siblings: PlacedBlock[];
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `block-${block.weekday}-${block.startHour}`,
+    id: `block-${block.weekday}-${block.startMinute}`,
     data: { block },
   });
   const element = useRef<HTMLDivElement | null>(null);
@@ -92,20 +99,22 @@ function Block({
       return;
     }
 
-    const hourHeight = node.getBoundingClientRect().height / (block.endHour - block.startHour);
+    const hourHeight =
+      (node.getBoundingClientRect().height / (block.endMinute - block.startMinute)) *
+      MINUTES_PER_HOUR;
     const originY = event.clientY;
-    let candidate = block.endHour;
+    let candidate = block.endMinute;
 
     function candidateFrom(clientY: number): number {
-      return block.endHour + Math.round((clientY - originY) / hourHeight);
+      return block.endMinute + Math.round((clientY - originY) / hourHeight) * MINUTES_PER_HOUR;
     }
 
     function move(event: PointerEvent) {
       candidate = candidateFrom(event.clientY);
       onPreview({
         weekday: block.weekday,
-        startHour: block.startHour,
-        endHour: candidate,
+        startMinute: block.startMinute,
+        endMinute: candidate,
         refused: !planResize(block, candidate, siblings).ok,
       });
     }
@@ -118,7 +127,7 @@ function Block({
     function finish() {
       stop();
       onPreview(null);
-      if (candidate !== block.endHour) {
+      if (candidate !== block.endMinute) {
         onResize?.(block, candidate);
       }
     }
@@ -152,7 +161,10 @@ function Block({
     if (event.shiftKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
       event.preventDefault();
       event.stopPropagation();
-      onResize?.(block, block.endHour + (event.key === "ArrowDown" ? 1 : -1));
+      onResize?.(
+        block,
+        block.endMinute + (event.key === "ArrowDown" ? MINUTES_PER_HOUR : -MINUTES_PER_HOUR),
+      );
       return;
     }
 
@@ -198,20 +210,20 @@ function Block({
       onKeyDownCapture={handleKeyDown}
       {...listeners}
       {...attributes}
-      data-testid={`block-${block.weekday}-${block.startHour}`}
+      data-testid={`block-${block.weekday}-${block.startMinute}`}
       data-grabbed={grabbed ? "true" : undefined}
       aria-grabbed={grabbed}
       className="block"
-      aria-label={`${commitment?.name ?? "Compromisso"}, ${WEEKDAY_NAMES[block.weekday]}, ${hourLabel(block.startHour)} às ${hourLabel(block.endHour)}`}
+      aria-label={`${commitment?.name ?? "Compromisso"}, ${WEEKDAY_NAMES[block.weekday]}, ${timeLabel(block.startMinute)} às ${timeLabel(block.endMinute)}`}
       style={{
-        gridRow: `${rowOf(block.startHour)} / ${rowOf(block.endHour)}`,
+        gridRow: `${rowOf(block.startMinute)} / ${rowOf(block.endMinute)}`,
         backgroundColor: commitment?.color,
         opacity: isDragging ? 0.4 : 1,
       }}
     >
       <span>{commitment?.name}</span>
       <span
-        data-testid={`resize-${block.weekday}-${block.startHour}`}
+        data-testid={`resize-${block.weekday}-${block.startMinute}`}
         className="resize-handle"
         onPointerDown={startResize}
       />
@@ -247,12 +259,12 @@ export function WeekGrid({
         return;
       }
       release();
-      if (cursor.weekday !== block.weekday || cursor.startHour !== block.startHour) {
-        onMove?.(block, { weekday: cursor.weekday, startHour: cursor.startHour });
+      if (cursor.weekday !== block.weekday || cursor.startMinute !== block.startMinute) {
+        onMove?.(block, { weekday: cursor.weekday, startMinute: cursor.startMinute });
       }
     },
   };
-  const hours = hoursOfDay();
+  const hours = wholeHoursOfDay();
   const marker = now === null ? null : nowMarker(now, focusedMonday);
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
 
@@ -263,10 +275,10 @@ export function WeekGrid({
         <div className="hour-labels">
           {hours.map((hour) => (
             <span key={hour} data-testid={`hour-label-${hour}`} className="hour-label">
-              {hourLabel(hour)}
+              {timeLabel(hour)}
             </span>
           ))}
-          <span className="hour-label hour-label-end">{hourLabel(LAST_HOUR)}</span>
+          <span className="hour-label hour-label-end">{timeLabel(MINUTES_PER_DAY)}</span>
         </div>
       </div>
 
@@ -284,7 +296,7 @@ export function WeekGrid({
               <div
                 data-testid="now-line"
                 className="now-line"
-                style={{ top: `calc(${marker.offsetHours} * var(--hour-height))` }}
+                style={{ top: `calc(${marker.offsetMinutes / MINUTES_PER_HOUR} * var(--hour-height))` }}
               />
             )}
             {hours.map((hour) => (
@@ -296,20 +308,20 @@ export function WeekGrid({
                 data-refused={preview.refused ? "true" : "false"}
                 className="resize-preview"
                 style={{
-                  gridRow: `${rowOf(preview.startHour)} / ${rowOf(Math.max(preview.endHour, preview.startHour + 1))}`,
+                  gridRow: `${rowOf(preview.startMinute)} / ${rowOf(Math.max(preview.endMinute, preview.startMinute + STEP_MINUTES))}`,
                 }}
               >
                 <span>
-                  {hourLabel(preview.startHour)} às {hourLabel(preview.endHour)}
+                  {timeLabel(preview.startMinute)} às {timeLabel(preview.endMinute)}
                 </span>
               </div>
             )}
             {blocks
               .filter((block) => block.weekday === weekday)
-              .sort((a, b) => a.startHour - b.startHour)
+              .sort((a, b) => a.startMinute - b.startMinute)
               .map((block) => (
                 <Block
-                  key={`${block.weekday}-${block.startHour}`}
+                  key={`${block.weekday}-${block.startMinute}`}
                   block={block}
                   commitment={byId.get(block.commitmentId)}
                   onResize={onResize}

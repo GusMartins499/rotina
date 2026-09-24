@@ -101,7 +101,7 @@ export function SettingsDrawer({ commitments, allocatedBlocks }: Props) {
                     value={{
                       name: commitment.name,
                       color: commitment.color as CommitmentInput["color"],
-                      dailyHours: commitment.dailyHours,
+                      dailyMinutes: commitment.dailyMinutes,
                     }}
                   />
                   <DeleteCommitment

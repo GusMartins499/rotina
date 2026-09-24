@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { WeeklyLoadPanel } from "./WeeklyLoadPanel";
 
-const trabalho = { id: 1, name: "TRABALHO", color: "#d73a4a", dailyHours: 8, createdAt: "" };
-const psicologo = { id: 2, name: "Psicólogo", color: "#8250df", dailyHours: null, createdAt: "" };
+const trabalho = { id: 1, name: "TRABALHO", color: "#d73a4a", dailyMinutes: 480, createdAt: "" };
+const psicologo = { id: 2, name: "Psicólogo", color: "#8250df", dailyMinutes: null, createdAt: "" };
 
 describe("weekly load panel", () => {
   it("sums the weekly hours of each commitment", () => {
@@ -11,9 +11,9 @@ describe("weekly load panel", () => {
       <WeeklyLoadPanel
         commitments={[trabalho]}
         blocks={[
-          { id: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 13 },
-          { id: 2, commitmentId: 1, weekday: 0, startHour: 14, endHour: 17 },
-          { id: 3, commitmentId: 1, weekday: 1, startHour: 8, endHour: 16 },
+          { id: 1, commitmentId: 1, weekday: 0, startMinute: 120, endMinute: 420 },
+          { id: 2, commitmentId: 1, weekday: 0, startMinute: 480, endMinute: 660 },
+          { id: 3, commitmentId: 1, weekday: 1, startMinute: 120, endMinute: 600 },
         ]}
       />,
     );
@@ -24,7 +24,7 @@ describe("weekly load panel", () => {
   it("shows zero for a commitment with no blocks", () => {
     render(<WeeklyLoadPanel commitments={[psicologo]} blocks={[]} />);
 
-    expect(screen.getByTestId("weekly-load-2")).toHaveTextContent("0h");
+    expect(screen.getByTestId("weekly-load-2")).toHaveTextContent("0min");
   });
 
   it("lists every commitment, with or without daily load", () => {

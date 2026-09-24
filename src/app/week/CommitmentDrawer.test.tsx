@@ -8,14 +8,14 @@ const trabalho: Commitment = {
   id: 1,
   name: "TRABALHO",
   color: "#d73a4a",
-  dailyHours: 8,
+  dailyMinutes: 480,
   createdAt: "",
 };
 const psicologo: Commitment = {
   id: 2,
   name: "Psicólogo",
   color: "#8250df",
-  dailyHours: null,
+  dailyMinutes: null,
   createdAt: "",
 };
 

@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { PALETTE, commitmentInputSchema, type CommitmentInput } from "../../domain/commitment";
+import { MINUTES_PER_HOUR } from "../../domain/time";
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
 
@@ -11,14 +12,14 @@ type Props = {
   submitLabel?: string;
 };
 
-const EMPTY: CommitmentInput = { name: "", color: PALETTE[0], dailyHours: null };
+const EMPTY: CommitmentInput = { name: "", color: PALETTE[0], dailyMinutes: null };
 
 export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" }: Props) {
   const [value, setValue] = useState<CommitmentInput>(initialValue ?? EMPTY);
   const [dailyHoursText, setDailyHoursText] = useState(
-    initialValue?.dailyHours === undefined || initialValue?.dailyHours === null
+    initialValue?.dailyMinutes === undefined || initialValue?.dailyMinutes === null
       ? ""
-      : String(initialValue.dailyHours),
+      : String(initialValue.dailyMinutes / MINUTES_PER_HOUR),
   );
   const [error, setError] = useState<string | null>(null);
   const fieldId = useId();
@@ -29,7 +30,8 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
 
     const candidate = {
       ...value,
-      dailyHours: dailyHoursText.trim() === "" ? null : Number(dailyHoursText),
+      dailyMinutes:
+        dailyHoursText.trim() === "" ? null : Number(dailyHoursText) * MINUTES_PER_HOUR,
     };
     const parsed = commitmentInputSchema.safeParse(candidate);
 
@@ -94,7 +96,7 @@ function messageFor(field: PropertyKey | undefined): string {
   if (field === "name") {
     return "Informe um nome para o compromisso.";
   }
-  if (field === "dailyHours") {
+  if (field === "dailyMinutes") {
     return "A carga diária precisa ser um número inteiro entre 1 e 17 horas.";
   }
   return "Escolha uma cor da paleta.";

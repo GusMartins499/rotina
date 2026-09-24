@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDuration } from "../../domain/time";
+
 import { useDraggable } from "@dnd-kit/core";
 import type { Commitment } from "../../repository/schema";
 
@@ -23,7 +25,7 @@ function DraggableCommitment({ commitment }: { commitment: Commitment }) {
         style={{ backgroundColor: commitment.color, opacity: isDragging ? 0.4 : 1 }}
       >
         <span>{commitment.name}</span>
-        {commitment.dailyHours !== null && <small>{commitment.dailyHours}h/dia</small>}
+        {commitment.dailyMinutes !== null && <small>{formatDuration(commitment.dailyMinutes)}/dia</small>}
       </div>
     </li>
   );

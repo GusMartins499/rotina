@@ -7,7 +7,7 @@ const trabalho = {
   id: 1,
   name: "TRABALHO",
   color: PALETTE[0],
-  dailyHours: 8,
+  dailyMinutes: 480,
   createdAt: "2026-09-21",
 };
 
@@ -15,7 +15,7 @@ const psicologo = {
   id: 2,
   name: "Psicólogo",
   color: PALETTE[4],
-  dailyHours: null,
+  dailyMinutes: null,
   createdAt: "2026-09-21",
 };
 

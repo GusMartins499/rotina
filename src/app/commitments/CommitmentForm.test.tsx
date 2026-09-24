@@ -17,7 +17,7 @@ describe("commitment form", () => {
     expect(onSubmit).toHaveBeenCalledWith({
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
   });
 
@@ -29,7 +29,7 @@ describe("commitment form", () => {
     await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "Psicólogo", dailyHours: null }),
+      expect.objectContaining({ name: "Psicólogo", dailyMinutes: null }),
     );
   });
 
@@ -77,12 +77,25 @@ describe("commitment form", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("shows an error when the daily load is fractional", async () => {
-    const onSubmit = vi.fn();
+  it("accepts a half hour daily load", async () => {
+    const onSubmit = vi.fn().mockResolvedValue({ ok: true });
     render(<CommitmentForm onSubmit={onSubmit} />);
 
     await userEvent.type(screen.getByLabelText(/nome/i), "TRABALHO");
     await userEvent.type(screen.getByLabelText(/carga/i), "2.5");
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ dailyMinutes: 150 }),
+    );
+  });
+
+  it("shows an error when the daily load falls off the step", async () => {
+    const onSubmit = vi.fn();
+    render(<CommitmentForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/nome/i), "TRABALHO");
+    await userEvent.type(screen.getByLabelText(/carga/i), "2.2");
     await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
@@ -116,7 +129,7 @@ describe("commitment form", () => {
     render(
       <CommitmentForm
         onSubmit={onSubmit}
-        initialValue={{ name: "TRABALHO", color: PALETTE[0], dailyHours: 8 }}
+        initialValue={{ name: "TRABALHO", color: PALETTE[0], dailyMinutes: 480 }}
       />,
     );
 

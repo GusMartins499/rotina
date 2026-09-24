@@ -2,11 +2,11 @@ import { describe, it, expect, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 import { useAllocation } from "./useAllocation";
 
-const trabalho = { id: 1, name: "TRABALHO", color: "#d73a4a", dailyHours: 8, createdAt: "" };
-const flashcards = { id: 2, name: "FLASHCARDS", color: "#0969da", dailyHours: 1, createdAt: "" };
+const trabalho = { id: 1, name: "TRABALHO", color: "#d73a4a", dailyMinutes: 480, createdAt: "" };
+const flashcards = { id: 2, name: "FLASHCARDS", color: "#0969da", dailyMinutes: 60, createdAt: "" };
 
-const monday8to13 = { id: 10, commitmentId: 1, weekday: 0, startHour: 8, endHour: 13 };
-const monday14to17 = { id: 11, commitmentId: 1, weekday: 0, startHour: 14, endHour: 17 };
+const monday8to13 = { id: 10, commitmentId: 1, weekday: 0, startMinute: 120, endMinute: 420 };
+const monday14to17 = { id: 11, commitmentId: 1, weekday: 0, startMinute: 480, endMinute: 660 };
 
 const setup = (initialBlocks = [monday8to13], persist = defaultPersist()) =>
   renderHook(() =>
@@ -34,11 +34,11 @@ describe("moving a block", () => {
     const { result } = setup();
 
     await act(async () => {
-      await result.current.move(monday8to13, { weekday: 1, startHour: 9 });
+      await result.current.move(monday8to13, { weekday: 1, startMinute: 180 });
     });
 
     expect(result.current.blocks[0]).toEqual(
-      expect.objectContaining({ weekday: 1, startHour: 9, endHour: 14 }),
+      expect.objectContaining({ weekday: 1, startMinute: 180, endMinute: 480 }),
     );
   });
 
@@ -47,10 +47,10 @@ describe("moving a block", () => {
     const { result } = setup([monday8to13, monday14to17], persist);
 
     await act(async () => {
-      await result.current.move(monday8to13, { weekday: 0, startHour: 12 });
+      await result.current.move(monday8to13, { weekday: 0, startMinute: 360 });
     });
 
-    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ startHour: 8 }));
+    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ startMinute: 120 }));
     expect(result.current.error).toMatch(/ocupado/i);
     expect(persist.move).not.toHaveBeenCalled();
   });
@@ -61,23 +61,23 @@ describe("moving a block", () => {
     const { result } = setup([monday8to13], persist);
 
     await act(async () => {
-      await result.current.move(monday8to13, { weekday: 1, startHour: 9 });
+      await result.current.move(monday8to13, { weekday: 1, startMinute: 180 });
     });
 
-    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ weekday: 0, startHour: 8 }));
+    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ weekday: 0, startMinute: 120 }));
     expect(result.current.error).toBe("banco fora");
   });
 });
 
 describe("resizing a block", () => {
-  it("shortens a block to the requested end hour", async () => {
+  it("shortens a block to the requested end time", async () => {
     const { result } = setup();
 
     await act(async () => {
-      await result.current.resize(monday8to13, 13 - 2);
+      await result.current.resize(monday8to13, 300);
     });
 
-    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ endHour: 11 }));
+    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ endMinute: 300 }));
   });
 
   it("refuses a resize that would overlap the next block", async () => {
@@ -85,10 +85,10 @@ describe("resizing a block", () => {
     const { result } = setup([monday8to13, monday14to17], persist);
 
     await act(async () => {
-      await result.current.resize(monday8to13, 15);
+      await result.current.resize(monday8to13, 540);
     });
 
-    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ endHour: 13 }));
+    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ endMinute: 420 }));
     expect(persist.resize).not.toHaveBeenCalled();
   });
 
@@ -96,11 +96,11 @@ describe("resizing a block", () => {
     const { result } = setup();
 
     await act(async () => {
-      await result.current.resize(monday8to13, 8);
+      await result.current.resize(monday8to13, 120);
     });
 
-    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ endHour: 13 }));
-    expect(result.current.error).toMatch(/uma hora/i);
+    expect(result.current.blocks[0]).toEqual(expect.objectContaining({ endMinute: 420 }));
+    expect(result.current.error).toMatch(/meia hora/i);
   });
 });
 
@@ -109,7 +109,7 @@ describe("announcements", () => {
     const { result } = setup();
 
     await act(async () => {
-      await result.current.move(monday8to13, { weekday: 1, startHour: 9 });
+      await result.current.move(monday8to13, { weekday: 1, startMinute: 180 });
     });
 
     expect(result.current.announcement).toBe("TRABALHO movido para terça, 09:00 às 14:00.");
@@ -119,7 +119,7 @@ describe("announcements", () => {
     const { result } = setup();
 
     await act(async () => {
-      await result.current.resize(monday8to13, 11);
+      await result.current.resize(monday8to13, 300);
     });
 
     expect(result.current.announcement).toBe(
@@ -141,7 +141,7 @@ describe("announcements", () => {
     const { result } = setup([monday8to13, monday14to17]);
 
     await act(async () => {
-      await result.current.move(monday8to13, { weekday: 0, startHour: 12 });
+      await result.current.move(monday8to13, { weekday: 0, startMinute: 360 });
     });
 
     expect(result.current.announcement).toBe("Esse horário já está ocupado.");

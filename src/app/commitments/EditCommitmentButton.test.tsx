@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { PALETTE } from "../../domain/commitment";
 import { EditCommitmentButton } from "./EditCommitmentButton";
 
-const trabalho = { name: "TRABALHO", color: PALETTE[0], dailyHours: 8 };
+const trabalho = { name: "TRABALHO", color: PALETTE[0], dailyMinutes: 480 };
 
 describe("edit commitment button", () => {
   it("opens a form filled with the current values", async () => {
@@ -26,7 +26,7 @@ describe("edit commitment button", () => {
     await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({ name: "TRABALHO REMOTO", dailyHours: 8 }),
+      expect.objectContaining({ name: "TRABALHO REMOTO", dailyMinutes: 480 }),
     );
   });
 

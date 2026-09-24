@@ -7,7 +7,7 @@ import { applyRollover, applyTemplate, saveTemplate } from "../../repository/rol
 import { revalidatePath } from "next/cache";
 import type { AllocateResult, WriteResult } from "./useAllocation";
 
-type Placement = { weekday: number; startHour: number; endHour: number };
+type Placement = { weekday: number; startMinute: number; endMinute: number };
 
 const FAILURE = "Não foi possível salvar essa mudança.";
 
