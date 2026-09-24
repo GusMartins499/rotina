@@ -6,3 +6,6 @@ data/
 .next/
 next-env.d.ts
 *.tsbuildinfo
+e2e/.data/
+test-results/
+playwright-report/

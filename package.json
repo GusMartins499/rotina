@@ -10,11 +10,12 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "node -e \"console.log('Playwright is configured in card #3 — no e2e suite yet.')\"",
+    "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/repository/migrate.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.45.3",
     "next": "^15.5.26",
@@ -23,6 +24,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.7",
