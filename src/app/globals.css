@@ -249,3 +249,37 @@ nav {
     width: 100%;
   }
 }
+
+.week-switcher {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+.week-switcher span {
+  font-weight: 600;
+}
+
+.routine-template {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.routine-template h2 {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.routine-template p {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
