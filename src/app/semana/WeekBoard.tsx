@@ -5,25 +5,29 @@ import { useState } from "react";
 import type { Commitment } from "../../repository/schema";
 import { CommitmentDrawer } from "./CommitmentDrawer";
 import { WeekGrid } from "./WeekGrid";
-import { useAllocation, type AllocateResult, type PlacedBlock } from "./useAllocation";
+import { WeeklyLoadPanel } from "./WeeklyLoadPanel";
+import {
+  useAllocation,
+  type AllocateResult,
+  type PlacedBlock,
+  type WriteResult,
+} from "./useAllocation";
+
+type Placement = { weekday: number; startHour: number; endHour: number };
 
 type Props = {
   weekLabel: string;
   commitments: Commitment[];
   initialBlocks: PlacedBlock[];
-  allocate: (input: {
-    commitmentId: number;
-    weekday: number;
-    startHour: number;
-    endHour: number;
-  }) => Promise<AllocateResult>;
+  allocate: (input: Placement & { commitmentId: number }) => Promise<AllocateResult>;
+  move: (id: number, values: Placement) => Promise<WriteResult>;
+  resize: (id: number, values: Placement) => Promise<WriteResult>;
+  remove: (id: number) => Promise<WriteResult>;
 };
 
 function parseSlot(id: string): { weekday: number; startHour: number } | null {
   const match = /^slot-(\d+)-(\d+)$/.exec(id);
-  return match === null
-    ? null
-    : { weekday: Number(match[1]), startHour: Number(match[2]) };
+  return match === null ? null : { weekday: Number(match[1]), startHour: Number(match[2]) };
 }
 
 function parseCommitment(id: string): number | null {
@@ -31,58 +35,59 @@ function parseCommitment(id: string): number | null {
   return match === null ? null : Number(match[1]);
 }
 
-export function WeekBoard({ weekLabel, commitments, initialBlocks, allocate }: Props) {
-  const { blocks, saving, error, allocate: place } = useAllocation({
-    initialBlocks,
-    commitments,
-    allocate,
-  });
-  const [activeCommitmentId, setActiveCommitmentId] = useState<number | null>(null);
+export function WeekBoard({ weekLabel, commitments, initialBlocks, ...persistence }: Props) {
+  const week = useAllocation({ initialBlocks, commitments, ...persistence });
+  const [focusedWeekday, setFocusedWeekday] = useState(0);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   function handleDragEnd(event: DragEndEvent) {
-    setActiveCommitmentId(null);
-
+    const dragged = event.active.data.current?.block as PlacedBlock | undefined;
     const slot = event.over === null ? null : parseSlot(String(event.over.id));
-    const commitmentId = parseCommitment(String(event.active.id));
-    if (slot === null || commitmentId === null) {
+
+    if (dragged !== undefined) {
+      if (slot === null) {
+        void week.remove(dragged);
+        return;
+      }
+      void week.move(dragged, slot);
       return;
     }
 
-    void place({ commitmentId, ...slot });
+    const commitmentId = parseCommitment(String(event.active.id));
+    if (slot !== null && commitmentId !== null) {
+      void week.allocate({ commitmentId, ...slot });
+    }
   }
 
   return (
-    <DndContext
-      id="week-board"
-      sensors={sensors}
-      onDragStart={(event) => setActiveCommitmentId(parseCommitment(String(event.active.id)))}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext id="week-board" sensors={sensors} onDragEnd={handleDragEnd}>
       <header className="week-header">
         <h1>{weekLabel}</h1>
         <p aria-live="polite" className="saving">
-          {saving ? "Salvando…" : ""}
+          {week.saving ? "Salvando…" : ""}
         </p>
-        {error !== null && (
+        {week.error !== null && (
           <p role="alert" data-testid="board-error">
-            {error}
+            {week.error}
           </p>
         )}
       </header>
 
       <div className="board">
         <WeekGrid
-          blocks={blocks}
+          blocks={week.blocks}
           commitments={commitments}
-          onDropAt={(weekday, startHour) =>
-            activeCommitmentId === null
-              ? undefined
-              : void place({ commitmentId: activeCommitmentId, weekday, startHour })
-          }
-          activeCommitmentId={activeCommitmentId}
+          onResize={(block, endHour) => void week.resize(block, endHour)}
+          onFocusWeekday={setFocusedWeekday}
         />
-        <CommitmentDrawer commitments={commitments} />
+        <div className="side">
+          <CommitmentDrawer
+            commitments={commitments}
+            blocks={week.blocks}
+            focusedWeekday={focusedWeekday}
+          />
+          <WeeklyLoadPanel commitments={commitments} blocks={week.blocks} />
+        </div>
       </div>
     </DndContext>
   );

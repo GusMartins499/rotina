@@ -2,11 +2,19 @@
 
 import { useState } from "react";
 import { planAllocation } from "../../domain/allocation";
+import { planMove, planResize, type RearrangePlan } from "../../domain/rearrange";
 import type { Block, Commitment } from "../../repository/schema";
 
 export type PlacedBlock = Omit<Block, "id" | "weekId"> & { id: number | null };
 
 export type AllocateResult = { ok: true; block: Block | null } | { ok: false; error: string };
+export type WriteResult = { ok: true } | { ok: false; error: string };
+
+export type DropTarget = {
+  commitmentId: number;
+  weekday: number;
+  startHour: number;
+};
 
 type Options = {
   initialBlocks: PlacedBlock[];
@@ -17,23 +25,75 @@ type Options = {
     startHour: number;
     endHour: number;
   }) => Promise<AllocateResult>;
+  move?: (id: number, values: Placement) => Promise<WriteResult>;
+  resize?: (id: number, values: Placement) => Promise<WriteResult>;
+  remove?: (id: number) => Promise<WriteResult>;
 };
 
-export type DropTarget = {
-  commitmentId: number;
-  weekday: number;
-  startHour: number;
-};
+type Placement = { weekday: number; startHour: number; endHour: number };
 
 const REFUSAL = {
   overlap: "Esse horário já está ocupado.",
   "out-of-day": "O compromisso não cabe nesse horário.",
+  empty: "Um bloco precisa ter pelo menos uma hora.",
 } as const;
 
-export function useAllocation({ initialBlocks, commitments, allocate }: Options) {
+const NOOP = async (): Promise<WriteResult> => ({ ok: true });
+
+export function useAllocation({
+  initialBlocks,
+  commitments,
+  allocate,
+  move: persistMove = NOOP,
+  resize: persistResize = NOOP,
+  remove: persistRemove = NOOP,
+}: Options) {
   const [blocks, setBlocks] = useState<PlacedBlock[]>(initialBlocks);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function persist(
+    optimistic: () => void,
+    write: () => Promise<{ ok: true } | { ok: false; error: string }>,
+  ) {
+    const snapshot = blocks;
+
+    optimistic();
+    setSaving(true);
+    const result = await write();
+    setSaving(false);
+
+    if (!result.ok) {
+      setBlocks(snapshot);
+      setError(result.error);
+    }
+  }
+
+  function replace(target: PlacedBlock, values: Placement) {
+    setBlocks((current) =>
+      current.map((block) => (block === target ? { ...block, ...values } : block)),
+    );
+  }
+
+  async function rearrange(target: PlacedBlock, plan: RearrangePlan, write: typeof persistMove) {
+    setError(null);
+
+    if (!plan.ok) {
+      setError(REFUSAL[plan.reason]);
+      return;
+    }
+
+    const after: Placement = {
+      weekday: plan.weekday,
+      startHour: plan.startHour,
+      endHour: plan.endHour,
+    };
+
+    await persist(
+      () => replace(target, after),
+      () => (target.id === null ? NOOP() : write(target.id, after)),
+    );
+  }
 
   async function place(target: DropTarget) {
     setError(null);
@@ -63,30 +123,45 @@ export function useAllocation({ initialBlocks, commitments, allocate }: Options)
       endHour: plan.endHour,
     };
 
-    setBlocks((current) => [...current, optimistic]);
-    setSaving(true);
+    await persist(
+      () => setBlocks((current) => [...current, optimistic]),
+      async () => {
+        const result = await allocate({
+          commitmentId: target.commitmentId,
+          weekday: target.weekday,
+          startHour: plan.startHour,
+          endHour: plan.endHour,
+        });
 
-    const result = await allocate({
-      commitmentId: target.commitmentId,
-      weekday: target.weekday,
-      startHour: plan.startHour,
-      endHour: plan.endHour,
-    });
+        if (result.ok && result.block !== null) {
+          const stored = result.block;
+          setBlocks((current) =>
+            current.map((block) =>
+              block === optimistic ? { ...optimistic, id: stored.id } : block,
+            ),
+          );
+        }
 
-    setSaving(false);
-
-    if (!result.ok) {
-      setBlocks((current) => current.filter((block) => block !== optimistic));
-      setError(result.error);
-      return;
-    }
-
-    if (result.block !== null) {
-      setBlocks((current) =>
-        current.map((block) => (block === optimistic ? { ...optimistic, id: result.block!.id } : block)),
-      );
-    }
+        return result;
+      },
+    );
   }
 
-  return { blocks, saving, error, allocate: place };
+  return {
+    blocks,
+    saving,
+    error,
+    allocate: place,
+    move: (target: PlacedBlock, to: { weekday: number; startHour: number }) =>
+      rearrange(target, planMove(target, to, blocks), persistMove),
+    resize: (target: PlacedBlock, endHour: number) =>
+      rearrange(target, planResize(target, endHour, blocks), persistResize),
+    remove: async (target: PlacedBlock) => {
+      setError(null);
+      await persist(
+        () => setBlocks((current) => current.filter((block) => block !== target)),
+        () => (target.id === null ? NOOP() : persistRemove(target.id)),
+      );
+    },
+  };
 }

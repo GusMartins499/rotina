@@ -3,7 +3,7 @@ import { listCommitments } from "../repository/commitments";
 import { getDatabase } from "../repository/db";
 import { listBlocksOfWeek, requireWeek } from "../repository/weeks";
 import { WeekBoard } from "./semana/WeekBoard";
-import { allocateBlockAction } from "./semana/actions";
+import { allocateBlockAction, moveBlockAction, removeBlockAction } from "./semana/actions";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +32,9 @@ export default function Page() {
         commitments={listCommitments(db)}
         initialBlocks={listBlocksOfWeek(db, week.id)}
         allocate={allocateBlockAction}
+        move={moveBlockAction}
+        resize={moveBlockAction}
+        remove={removeBlockAction}
       />
     </>
   );
