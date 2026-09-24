@@ -3,7 +3,6 @@
 import {
   DndContext,
   MeasuringStrategy,
-  closestCenter,
   PointerSensor,
   useSensor,
   useSensors,
@@ -11,6 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { useState } from "react";
 import type { Commitment } from "../../repository/schema";
+import { withinGrid } from "./collision";
 import { CommitmentDrawer } from "./CommitmentDrawer";
 import { WeekGrid } from "./WeekGrid";
 import { WeeklyLoadPanel } from "./WeeklyLoadPanel";
@@ -95,7 +95,7 @@ export function WeekBoard({
     <DndContext
       id="week-board"
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={withinGrid}
       autoScroll={false}
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragEnd={handleDragEnd}
