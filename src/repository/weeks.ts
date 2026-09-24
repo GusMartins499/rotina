@@ -23,3 +23,15 @@ export function listBlocksOfWeek(db: AppDatabase, weekId: number): Block[] {
 export function createBlock(db: AppDatabase, values: Omit<Block, "id">): Block {
   return db.insert(blocks).values(values).returning().get();
 }
+
+export function updateBlock(
+  db: AppDatabase,
+  id: number,
+  values: Pick<Block, "weekday" | "startHour" | "endHour">,
+): Block {
+  return db.update(blocks).set(values).where(eq(blocks.id, id)).returning().get();
+}
+
+export function deleteBlock(db: AppDatabase, id: number): void {
+  db.delete(blocks).where(eq(blocks.id, id)).run();
+}
