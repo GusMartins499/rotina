@@ -65,6 +65,30 @@ describe("commitment form", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(/banco indisponível/i);
   });
 
+  it("shows an error when the daily load is not a number", async () => {
+    const onSubmit = vi.fn();
+    render(<CommitmentForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/nome/i), "TRABALHO");
+    await userEvent.type(screen.getByLabelText(/carga/i), "abc");
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("shows an error when the daily load is fractional", async () => {
+    const onSubmit = vi.fn();
+    render(<CommitmentForm onSubmit={onSubmit} />);
+
+    await userEvent.type(screen.getByLabelText(/nome/i), "TRABALHO");
+    await userEvent.type(screen.getByLabelText(/carga/i), "2.5");
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it("clears the form after a successful create", async () => {
     const onSubmit = vi.fn().mockResolvedValue({ ok: true });
     render(<CommitmentForm onSubmit={onSubmit} />);
