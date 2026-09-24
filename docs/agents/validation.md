@@ -9,7 +9,7 @@ sem GitOps — Argo CD não cabe na máquina (ver docs/product).
 lint: npm run lint
 typecheck: npm run typecheck
 test: npm run test
-e2e: npm run test:e2e
+e2e: pending (card #3 — Playwright)
 pr_size_budget: 500
 guidelines: GUIDELINES.md, AGENTS.md
 ```
