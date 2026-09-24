@@ -56,3 +56,23 @@ export const blocks = sqliteTable(
 export type Commitment = typeof commitments.$inferSelect;
 export type Week = typeof weeks.$inferSelect;
 export type Block = typeof blocks.$inferSelect;
+
+export const templateBlocks = sqliteTable(
+  "template_blocks",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    commitmentId: integer("commitment_id")
+      .notNull()
+      .references(() => commitments.id, { onDelete: "cascade" }),
+    weekday: integer("weekday").notNull(),
+    startHour: integer("start_hour").notNull(),
+    endHour: integer("end_hour").notNull(),
+  },
+  (table) => [
+    check("template_weekday_range", sql`${table.weekday} >= 0 AND ${table.weekday} <= 6`),
+    check("template_within_day", sql`${table.startHour} >= 6 AND ${table.endHour} <= 23`),
+    check("template_positive_duration", sql`${table.endHour} > ${table.startHour}`),
+  ],
+);
+
+export type TemplateBlock = typeof templateBlocks.$inferSelect;
