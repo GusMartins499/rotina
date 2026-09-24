@@ -159,6 +159,10 @@ nav {
     display: none;
   }
 
+  .resize-handle {
+    display: none;
+  }
+
   .week-grid {
     flex-direction: column;
     overflow: visible;
@@ -175,5 +179,73 @@ nav {
 
   .day-slots {
     grid-template-rows: repeat(17, 26px);
+  }
+}
+
+.side {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.drawer-day {
+  margin: 0 0 8px;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.drawer-item small {
+  font-size: 0.65rem;
+  opacity: 0.85;
+}
+
+.block {
+  position: relative;
+  cursor: grab;
+}
+
+.resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  cursor: ns-resize;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.weekly-load {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.weekly-load h2 {
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+}
+
+.weekly-load ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weekly-load li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  .side {
+    flex: 1 1 auto;
+    width: 100%;
   }
 }

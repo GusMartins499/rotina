@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import { DndContext } from "@dnd-kit/core";
 import { WeekGrid } from "./WeekGrid";
 
 const trabalho = { id: 1, name: "TRABALHO", color: "#d73a4a", dailyHours: 8, createdAt: "" };
@@ -7,21 +8,20 @@ const flashcards = { id: 2, name: "FLASHCARDS", color: "#0969da", dailyHours: 1,
 
 const renderGrid = (blocks: Parameters<typeof WeekGrid>[0]["blocks"] = []) =>
   render(
-    <WeekGrid
-      blocks={blocks}
-      commitments={[trabalho, flashcards]}
-      onDropAt={vi.fn()}
-      activeCommitmentId={null}
-    />,
+    <DndContext id="test">
+      <WeekGrid blocks={blocks} commitments={[trabalho, flashcards]} onResize={vi.fn()} />
+    </DndContext>,
   );
 
 describe("week grid", () => {
   it("renders the seven weekdays", () => {
     renderGrid();
 
-    for (const day of ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO", "DOMINGO"]) {
-      expect(screen.getByText(day)).toBeInTheDocument();
-    }
+    const days = ["SEGUNDA", "TERÇA", "QUARTA", "QUINTA", "SEXTA", "SÁBADO", "DOMINGO"];
+
+    days.forEach((day, weekday) => {
+      expect(screen.getByTestId(`weekday-head-${weekday}`)).toHaveTextContent(day);
+    });
   });
 
   it("renders every hour row from 06:00 to 23:00", () => {

@@ -17,6 +17,10 @@ export const WEEKDAY_LABELS = [
   "DOMINGO",
 ] as const;
 
+export function durationOf(interval: HourInterval): number {
+  return interval.endHour - interval.startHour;
+}
+
 export function hourLabel(hour: number): string {
   return `${String(hour).padStart(2, "0")}:00`;
 }
