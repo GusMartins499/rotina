@@ -15,6 +15,13 @@
       "when": 1790208045522,
       "tag": "0001_block_overlap_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790215025880,
+      "tag": "0002_week_kind_unique",
+      "breakpoints": true
     }
   ]
 }

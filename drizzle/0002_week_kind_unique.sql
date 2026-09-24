@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `weeks_kind_unique` ON `weeks` (`kind`);

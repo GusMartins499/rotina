@@ -20,7 +20,7 @@ drizzle/          migrations versionadas   → geradas por drizzle-kit
 | Tabela | O que é | Ciclo de vida |
 |---|---|---|
 | `commitments` | catálogo de compromissos (nome, cor, carga diária opcional) | sobrevive à troca de semana |
-| `weeks` | semana identificada pela data da sua segunda-feira; `kind` é `current` ou `next` | no máximo duas vivas; a encerrada é descartada |
+| `weeks` | semana identificada pela data da sua segunda-feira; `kind` é `current` ou `next`, único por tipo | no máximo duas vivas; a encerrada é descartada |
 | `blocks` | alocação de um compromisso num dia e num intervalo de horas | apagado em cascata com a semana |
 
 Um bloco é um **intervalo** (`start_hour`, `end_hour`), não uma linha por slot de
@@ -53,6 +53,17 @@ tocam (um termina às 13:00, outro começa às 13:00) **não** se sobrepõem.
 `overlaps` existe e está testada, mas nenhum caminho de escrita a chama ainda.
 O card #3 é quem liga a metade do domínio, ao validar o drop antes de persistir.
 Enquanto isso, uma violação produz um erro de SQLite, não uma mensagem.
+
+### No máximo uma semana de cada tipo
+
+| Camada | Onde |
+|---|---|
+| Banco | índice único `weeks_kind_unique` sobre `kind` |
+| Domínio | ainda não existe — o card #5 adiciona `rolloverPlan`, que nunca deve produzir dois `current` |
+
+`GUIDELINES.md` § Fail-safe exige que uma virada falha nunca deixe o app com
+duas semanas `current` nem com nenhuma. O índice único garante isso mesmo se a
+transação da virada for escrita errada: a segunda inserção aborta.
 
 ### Faixa horária e duração
 

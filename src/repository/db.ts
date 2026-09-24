@@ -6,7 +6,7 @@ import * as schema from "./schema.js";
 
 const DEFAULT_DATABASE_PATH = "./data/rotina.db";
 
-export function databasePath(): string {
+function databasePath(): string {
   return process.env.DATABASE_PATH ?? DEFAULT_DATABASE_PATH;
 }
 

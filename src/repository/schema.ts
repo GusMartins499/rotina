@@ -25,7 +25,9 @@ export const weeks = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     mondayDate: text("monday_date").notNull().unique(),
-    kind: text("kind", { enum: ["current", "next"] }).notNull(),
+    kind: text("kind", { enum: ["current", "next"] })
+      .notNull()
+      .unique(),
   },
   (table) => [check("weeks_kind_values", sql`${table.kind} IN ('current', 'next')`)],
 );

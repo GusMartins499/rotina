@@ -88,6 +88,14 @@ describe("domain schema", () => {
     ).toThrow();
   });
 
+  it("rejects a second week with the same kind", () => {
+    expect(() => insertWeek("2026-09-28", "current")).toThrow();
+  });
+
+  it("allows one current week and one next week", () => {
+    expect(() => insertWeek("2026-09-28", "next")).not.toThrow();
+  });
+
   it("cascades block deletion when the week is removed", () => {
     insertBlock({ weekId: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 13 });
     insertBlock({ weekId: 1, commitmentId: 1, weekday: 1, startHour: 8, endHour: 13 });
