@@ -1,4 +1,4 @@
-import { MINUTES_PER_DAY, MINUTES_PER_HOUR, type MinuteInterval } from "./time";
+import { MINUTES_PER_DAY, STEP_MINUTES, type MinuteInterval } from "./time";
 import { overlaps } from "./overlaps";
 
 export type AllocationTarget = {
@@ -13,7 +13,7 @@ export type AllocationPlan =
   | { ok: false; reason: "overlap" | "out-of-day" };
 
 export function planAllocation(target: AllocationTarget): AllocationPlan {
-  const duration = target.commitment.dailyMinutes ?? MINUTES_PER_HOUR;
+  const duration = target.commitment.dailyMinutes ?? STEP_MINUTES;
   const interval = {
     startMinute: target.startMinute,
     endMinute: target.startMinute + duration,

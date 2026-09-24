@@ -2,7 +2,8 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { PALETTE, commitmentInputSchema, type CommitmentInput } from "../../domain/commitment";
-import { MINUTES_PER_HOUR } from "../../domain/time";
+import { formatDuration } from "../../domain/time";
+import { parseDuration } from "../../domain/duration";
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
 
@@ -16,10 +17,10 @@ const EMPTY: CommitmentInput = { name: "", color: PALETTE[0], dailyMinutes: null
 
 export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" }: Props) {
   const [value, setValue] = useState<CommitmentInput>(initialValue ?? EMPTY);
-  const [dailyHoursText, setDailyHoursText] = useState(
+  const [dailyLoadText, setDailyLoadText] = useState(
     initialValue?.dailyMinutes === undefined || initialValue?.dailyMinutes === null
       ? ""
-      : String(initialValue.dailyMinutes / MINUTES_PER_HOUR),
+      : formatDuration(initialValue.dailyMinutes),
   );
   const [error, setError] = useState<string | null>(null);
   const fieldId = useId();
@@ -28,11 +29,15 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
     event.preventDefault();
     setError(null);
 
-    const candidate = {
-      ...value,
-      dailyMinutes:
-        dailyHoursText.trim() === "" ? null : Number(dailyHoursText) * MINUTES_PER_HOUR,
-    };
+    const typed = dailyLoadText.trim();
+    const dailyMinutes = typed === "" ? null : parseDuration(typed);
+
+    if (typed !== "" && dailyMinutes === null) {
+      setError("Use uma duração como 1h30, 2h ou 30min, em passos de 30 minutos.");
+      return;
+    }
+
+    const candidate = { ...value, dailyMinutes };
     const parsed = commitmentInputSchema.safeParse(candidate);
 
     if (!parsed.success) {
@@ -48,7 +53,7 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
 
     if (initialValue === undefined) {
       setValue(EMPTY);
-      setDailyHoursText("");
+      setDailyLoadText("");
     }
   }
 
@@ -61,12 +66,13 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
         onChange={(event) => setValue({ ...value, name: event.target.value })}
       />
 
-      <label htmlFor={`${fieldId}-daily-hours`}>Carga diária (horas)</label>
+      <label htmlFor={`${fieldId}-daily-load`}>Carga diária</label>
       <input
-        id={`${fieldId}-daily-hours`}
-        inputMode="numeric"
-        value={dailyHoursText}
-        onChange={(event) => setDailyHoursText(event.target.value)}
+        id={`${fieldId}-daily-load`}
+        inputMode="text"
+        placeholder="1h30"
+        value={dailyLoadText}
+        onChange={(event) => setDailyLoadText(event.target.value)}
       />
 
       <fieldset>
@@ -97,7 +103,7 @@ function messageFor(field: PropertyKey | undefined): string {
     return "Informe um nome para o compromisso.";
   }
   if (field === "dailyMinutes") {
-    return "A carga diária precisa ser um número inteiro entre 1 e 17 horas.";
+    return "Use uma duração como 1h30, 2h ou 30min, em passos de 30 minutos.";
   }
   return "Escolha uma cor da paleta.";
 }

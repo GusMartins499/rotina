@@ -16,7 +16,7 @@ describe("allocation planning", () => {
     expect(plan).toEqual({ ok: true, startMinute: 120, endMinute: 600 });
   });
 
-  it("sizes a commitment without daily minutes as one hour", () => {
+  it("sizes a commitment without daily minutes as one step", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 1,
@@ -24,7 +24,7 @@ describe("allocation planning", () => {
       existing: [],
     });
 
-    expect(plan).toEqual({ ok: true, startMinute: 720, endMinute: 780 });
+    expect(plan).toEqual({ ok: true, startMinute: 720, endMinute: 750 });
   });
 
   it("refuses an allocation that overlaps an existing block", () => {
@@ -64,11 +64,11 @@ describe("allocation planning", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 0,
-      startMinute: 960,
+      startMinute: 990,
       existing: [],
     });
 
-    expect(plan).toEqual({ ok: true, startMinute: 960, endMinute: 1020 });
+    expect(plan).toEqual({ ok: true, startMinute: 990, endMinute: 1020 });
   });
 
   it("accepts an allocation that starts exactly where another ends", () => {

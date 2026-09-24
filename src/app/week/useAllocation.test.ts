@@ -64,7 +64,7 @@ describe("allocation state", () => {
     ]);
   });
 
-  it("adds a one hour block for a commitment without daily minutes", async () => {
+  it("adds a half hour block for a commitment without daily minutes", async () => {
     const { result } = setup();
 
     await act(async () => {
@@ -72,7 +72,7 @@ describe("allocation state", () => {
     });
 
     expect(result.current.blocks[0]).toEqual(
-      expect.objectContaining({ startMinute: 720, endMinute: 780 }),
+      expect.objectContaining({ startMinute: 720, endMinute: 750 }),
     );
   });
 

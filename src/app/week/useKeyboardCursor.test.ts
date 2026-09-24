@@ -19,13 +19,13 @@ describe("keyboard cursor", () => {
     expect(result.current.cursor).toEqual({ id: 1, weekday: 2, startMinute: 240 });
   });
 
-  it("moves the cursor one hour down", () => {
+  it("moves the cursor one step down", () => {
     const { result } = renderHook(() => useKeyboardCursor());
 
     act(() => result.current.grab(block));
     act(() => result.current.nudge(0, 1));
 
-    expect(result.current.cursor).toEqual({ id: 1, weekday: 2, startMinute: 300 });
+    expect(result.current.cursor).toEqual({ id: 1, weekday: 2, startMinute: 270 });
   });
 
   it("moves the cursor one weekday right", () => {
@@ -70,7 +70,7 @@ describe("keyboard cursor", () => {
     act(() => result.current.grab({ ...block, startMinute: 960, endMinute: 1020 }));
     act(() => result.current.nudge(0, 1));
 
-    expect(result.current.cursor?.startMinute).toBe(960);
+    expect(result.current.cursor?.startMinute).toBe(990);
   });
 
   it("releases the cursor", () => {
