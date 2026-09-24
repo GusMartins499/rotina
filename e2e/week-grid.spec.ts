@@ -74,6 +74,8 @@ test("removes a block by dragging it out of the grid", async ({ page }) => {
 
   await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-4-18"));
   await expect(page.getByTestId("block-4-18")).toBeVisible();
+  await page.waitForTimeout(800);
+  const before = await page.locator('[data-testid^="block-"]').count();
 
   const block = await page.getByTestId("block-4-18").boundingBox();
   if (block === null) {
@@ -84,10 +86,10 @@ test("removes a block by dragging it out of the grid", async ({ page }) => {
   await page.mouse.move(10, 10, { steps: 12 });
   await page.mouse.up();
 
-  await expect(page.getByTestId("block-4-18")).toHaveCount(0);
+  await expect(page.locator('[data-testid^="block-"]')).toHaveCount(before - 1);
 
   await page.reload();
-  await expect(page.getByTestId("block-4-18")).toHaveCount(0);
+  await expect(page.locator('[data-testid^="block-"]')).toHaveCount(before - 1);
 });
 
 test("switches focus between the current and the next week", async ({ page }) => {
@@ -204,4 +206,38 @@ test("announces a refusal, not only a success", async ({ page }) => {
   await page.keyboard.press("Space");
 
   await expect(page.getByTestId("grid-announcement")).toContainText("já está ocupado");
+});
+
+test("announces the removal when a block is dragged out", async ({ page }) => {
+  await page.goto("/");
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-3-19"));
+  await expect(page.getByTestId("block-3-19")).toBeVisible();
+  await page.waitForTimeout(800);
+
+  const block = await page.getByTestId("block-3-19").boundingBox();
+  if (block === null) {
+    throw new Error("block is not visible");
+  }
+  await page.mouse.move(block.x + block.width / 2, block.y + 4);
+  await page.mouse.down();
+  await page.mouse.move(10, 10, { steps: 12 });
+  await page.mouse.up();
+
+  await expect(page.getByTestId("grid-announcement")).toContainText("removido de quinta");
+});
+
+test("resolves an imprecise drop inside the grid to the closest slot", async ({ page }) => {
+  await page.goto("/");
+  const slot = await page.getByTestId("slot-5-11").boundingBox();
+  const source = await page.getByTestId("drawer-commitment-2").boundingBox();
+  if (slot === null || source === null) {
+    throw new Error("missing boxes");
+  }
+
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(slot.x + slot.width / 2, slot.y + slot.height - 2, { steps: 12 });
+  await page.mouse.up();
+
+  await expect(page.locator('[data-testid^="block-5-"]')).toHaveCount(1);
 });
