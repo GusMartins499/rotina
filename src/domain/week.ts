@@ -10,3 +10,8 @@ export function mondayOf(isoDate: string): string {
   const monday = new Date(date.getTime() - weekdayIndexOf(isoDate) * MILLISECONDS_PER_DAY);
   return monday.toISOString().slice(0, 10);
 }
+
+export function nextMonday(mondayDate: string): string {
+  const monday = new Date(`${mondayDate}T00:00:00Z`);
+  return new Date(monday.getTime() + 7 * MILLISECONDS_PER_DAY).toISOString().slice(0, 10);
+}
