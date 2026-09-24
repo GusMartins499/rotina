@@ -1,6 +1,14 @@
 "use client";
 
-import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  MeasuringStrategy,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import { useState } from "react";
 import type { Commitment } from "../../repository/schema";
 import { CommitmentDrawer } from "./CommitmentDrawer";
@@ -84,11 +92,26 @@ export function WeekBoard({
   }
 
   return (
-    <DndContext id="week-board" sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      id="week-board"
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      autoScroll={false}
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+      onDragEnd={handleDragEnd}
+    >
       <header className="week-header">
         <h1>{weekLabel}</h1>
         <p aria-live="polite" className="saving">
           {week.saving ? "Salvando…" : ""}
+        </p>
+        <p
+          aria-live="polite"
+          role="status"
+          data-testid="grid-announcement"
+          className="announcement"
+        >
+          {week.announcement}
         </p>
         {week.error !== null && (
           <p role="alert" data-testid="board-error">
@@ -102,6 +125,8 @@ export function WeekBoard({
           blocks={week.blocks}
           commitments={commitments}
           onResize={(block, endHour) => void week.resize(block, endHour)}
+          onRemove={(block) => void week.remove(block)}
+          onMove={(block, to) => void week.move(block, to)}
           onFocusWeekday={setFocusedWeekday}
         />
         <div className="side">

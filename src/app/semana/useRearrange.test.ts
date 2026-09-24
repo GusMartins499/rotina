@@ -104,6 +104,50 @@ describe("resizing a block", () => {
   });
 });
 
+describe("announcements", () => {
+  it("announces a move naming the commitment and the new hours", async () => {
+    const { result } = setup();
+
+    await act(async () => {
+      await result.current.move(monday8to13, { weekday: 1, startHour: 9 });
+    });
+
+    expect(result.current.announcement).toBe("TRABALHO movido para terça, 09:00 às 14:00.");
+  });
+
+  it("announces a resize", async () => {
+    const { result } = setup();
+
+    await act(async () => {
+      await result.current.resize(monday8to13, 11);
+    });
+
+    expect(result.current.announcement).toBe(
+      "TRABALHO redimensionado para segunda, 08:00 às 11:00.",
+    );
+  });
+
+  it("announces a removal naming what was removed", async () => {
+    const { result } = setup();
+
+    await act(async () => {
+      await result.current.remove(monday8to13);
+    });
+
+    expect(result.current.announcement).toBe("TRABALHO removido de segunda, 08:00 às 13:00.");
+  });
+
+  it("announces a refusal, not only a success", async () => {
+    const { result } = setup([monday8to13, monday14to17]);
+
+    await act(async () => {
+      await result.current.move(monday8to13, { weekday: 0, startHour: 12 });
+    });
+
+    expect(result.current.announcement).toBe("Esse horário já está ocupado.");
+  });
+});
+
 describe("removing a block", () => {
   it("removes the block and frees the slot", async () => {
     const { result } = setup();
