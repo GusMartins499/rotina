@@ -9,6 +9,10 @@
   identificador (`findCompromissoById` é proibido).
 - Mantenha o **português apenas nos textos visíveis ao usuário**, isolados na
   camada de apresentação. Nenhuma string de UI dentro de domínio ou repositório.
+- Nomeie **rotas, segmentos de caminho e nomes e valores de parâmetros de
+  consulta em inglês** (`/commitments`, `?week=next`). Eles aparecem na barra de
+  endereço, mas são identificadores, não conteúdo — a exceção do português vale
+  só para o texto que a interface renderiza.
 - **Não escreva comentários**: nem blocos JSDoc, nem comentários inline. Nomes e
   testes carregam o significado.
 - Uma armadilha externa que não for óbvia vira **teste com nome descritivo**,
