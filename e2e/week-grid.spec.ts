@@ -249,6 +249,43 @@ test("serves the commitments screen from an english route", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Compromissos" })).toBeVisible();
 });
 
+test("opens commitments in a drawer from the gear button", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Compromissos" }).click();
+
+  const drawer = page.getByRole("dialog");
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toContainText("TRABALHO");
+  await expect(page.getByTestId("weekday-head-0")).toBeVisible();
+});
+
+test("closes the settings drawer with Escape and returns focus", async ({ page }) => {
+  await page.goto("/");
+
+  const gear = page.getByRole("button", { name: "Compromissos" });
+  await gear.click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+
+  await page.keyboard.press("Escape");
+
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(gear).toBeFocused();
+});
+
+test("lists a new commitment in the drag drawer without a reload", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Compromissos" }).click();
+
+  await page.getByLabel(/nome/i).fill("Academia");
+  await page.getByRole("button", { name: /salvar compromisso/i }).click();
+
+  await expect(page.getByRole("dialog")).toContainText("Academia");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".drawer")).toContainText("Academia");
+});
+
 test("keeps the visible labels in portuguese", async ({ page }) => {
   await page.goto("/?week=next");
 

@@ -1,11 +1,11 @@
-import Link from "next/link";
 import { mondayOf } from "../domain/week";
-import { listCommitments } from "../repository/commitments";
+import { countBlocksOf, listCommitments } from "../repository/commitments";
 import { getDatabase } from "../repository/db";
 import { applyRollover } from "../repository/rollover";
 import { ensureWeekPair, listBlocksOfWeek } from "../repository/weeks";
 import { WeekBoard } from "./week/WeekBoard";
 import { WeekSwitcher } from "./week/WeekSwitcher";
+import { SettingsDrawer } from "./commitments/SettingsDrawer";
 import {
   allocateBlockAction,
   applyTemplateAction,
@@ -40,17 +40,22 @@ export default async function Page({
   const week = focus === "next" ? pair.next : pair.current;
   const blocks = listBlocksOfWeek(db, week.id);
 
+  const commitments = listCommitments(db);
+  const allocatedBlocks = Object.fromEntries(
+    commitments.map((commitment) => [commitment.id, countBlocksOf(db, commitment.id)]),
+  );
+
   return (
     <>
-      <nav>
-        <Link href="/commitments">Gerenciar compromissos</Link>
-      </nav>
-      <WeekSwitcher focus={focus} today={today} />
+      <div className="top-bar">
+        <WeekSwitcher focus={focus} today={today} />
+        <SettingsDrawer commitments={commitments} allocatedBlocks={allocatedBlocks} />
+      </div>
       <WeekBoard
         weekLabel={weekLabel(week.mondayDate)}
         focusedMonday={week.mondayDate}
         focus={focus}
-        commitments={listCommitments(db)}
+        commitments={commitments}
         initialBlocks={blocks}
         allocate={allocateBlockAction}
         move={moveBlockAction}
