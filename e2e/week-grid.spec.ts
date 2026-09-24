@@ -6,26 +6,26 @@ test("drags a commitment from the drawer onto the grid and it survives a reload"
 }) => {
   await page.goto("/");
 
-  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-0-8"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-0-120"));
 
-  await expect(page.getByTestId("block-0-8")).toBeVisible();
-  await expect(page.getByTestId("block-0-8")).toHaveAccessibleName(
+  await expect(page.getByTestId("block-0-120")).toBeVisible();
+  await expect(page.getByTestId("block-0-120")).toHaveAccessibleName(
     "TRABALHO, segunda, 08:00 às 16:00",
   );
 
   await page.reload();
 
-  await expect(page.getByTestId("block-0-8")).toBeVisible();
+  await expect(page.getByTestId("block-0-120")).toBeVisible();
 });
 
 test("refuses a drop that overlaps an existing block", async ({ page }) => {
   await page.goto("/");
 
-  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-0-8"));
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-0-12"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-0-120"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-0-360"));
 
   await expect(page.getByTestId("board-error")).toContainText(/ocupado/i);
-  await expect(page.getByTestId("block-0-12")).toHaveCount(0);
+  await expect(page.getByTestId("block-0-360")).toHaveCount(0);
 });
 
 test("keeps the week readable at 390px with no horizontal scroll", async ({ page }) => {
@@ -43,13 +43,13 @@ test("keeps the week readable at 390px with no horizontal scroll", async ({ page
 test("splits TRABALHO into two blocks and clears the daily remainder", async ({ page }) => {
   await page.goto("/");
 
-  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-2-8"));
-  await expect(page.getByTestId("block-2-8")).toHaveAccessibleName(
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-2-120"));
+  await expect(page.getByTestId("block-2-120")).toHaveAccessibleName(
     "TRABALHO, quarta, 08:00 às 16:00",
   );
 
-  const block = page.getByTestId("block-2-8");
-  const handle = page.getByTestId("resize-2-8");
+  const block = page.getByTestId("block-2-120");
+  const handle = page.getByTestId("resize-2-120");
   const box = await handle.boundingBox();
   if (box === null) {
     throw new Error("resize handle is not visible");
@@ -61,23 +61,23 @@ test("splits TRABALHO into two blocks and clears the daily remainder", async ({ 
 
   await expect(block).toHaveAccessibleName("TRABALHO, quarta, 08:00 às 13:00");
 
-  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-2-14"));
-  await expect(page.getByTestId("block-2-14")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-2-480"));
+  await expect(page.getByTestId("block-2-480")).toBeVisible();
 
   await page.reload();
-  await expect(page.getByTestId("block-2-8")).toBeVisible();
-  await expect(page.getByTestId("block-2-14")).toBeVisible();
+  await expect(page.getByTestId("block-2-120")).toBeVisible();
+  await expect(page.getByTestId("block-2-480")).toBeVisible();
 });
 
 test("removes a block by dragging it out of the grid", async ({ page }) => {
   await page.goto("/");
 
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-4-18"));
-  await expect(page.getByTestId("block-4-18")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-4-720"));
+  await expect(page.getByTestId("block-4-720")).toBeVisible();
   await page.waitForTimeout(800);
   const before = await page.locator('[data-testid^="block-"]').count();
 
-  const block = await page.getByTestId("block-4-18").boundingBox();
+  const block = await page.getByTestId("block-4-720").boundingBox();
   if (block === null) {
     throw new Error("block is not visible");
   }
@@ -99,7 +99,7 @@ test("switches focus between the current and the next week", async ({ page }) =>
   await page.goto("/?week=next");
 
   await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
-  await expect(page.getByTestId("block-0-8")).toHaveCount(0);
+  await expect(page.getByTestId("block-0-120")).toHaveCount(0);
 
   await page.getByRole("link", { name: /voltar/i }).click();
   await expect(page.getByTestId("week-focus")).toHaveText("Semana atual");
@@ -109,8 +109,8 @@ test("saves the current week as the base routine and applies it to the next one"
   page,
 }) => {
   await page.goto("/");
-  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-3-9"));
-  await expect(page.getByTestId("block-3-9")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-3-180"));
+  await expect(page.getByTestId("block-3-180")).toBeVisible();
 
   await page.waitForTimeout(800);
 
@@ -122,28 +122,28 @@ test("saves the current week as the base routine and applies it to the next one"
   await expect(apply).toBeEnabled();
   await apply.click();
 
-  await expect(page.getByTestId("block-3-9")).toBeVisible();
+  await expect(page.getByTestId("block-3-180")).toBeVisible();
 
   await page.reload();
-  await expect(page.getByTestId("block-3-9")).toBeVisible();
+  await expect(page.getByTestId("block-3-180")).toBeVisible();
 });
 
 test("keeps the two weeks independent", async ({ page }) => {
   await page.goto("/?week=next");
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-20"));
-  await expect(page.getByTestId("block-5-20")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-840"));
+  await expect(page.getByTestId("block-5-840")).toBeVisible();
 
   await page.goto("/");
-  await expect(page.getByTestId("block-5-20")).toHaveCount(0);
+  await expect(page.getByTestId("block-5-840")).toHaveCount(0);
 });
 
 test("moves a block with the keyboard and announces the result", async ({ page }) => {
   await page.goto("/");
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-15"));
-  await expect(page.getByTestId("block-6-15")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-540"));
+  await expect(page.getByTestId("block-6-540")).toBeVisible();
   await page.waitForTimeout(800);
 
-  await page.getByTestId("block-6-15").focus();
+  await page.getByTestId("block-6-540").focus();
   await page.keyboard.press("Space");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Space");
@@ -151,55 +151,55 @@ test("moves a block with the keyboard and announces the result", async ({ page }
   await expect(page.getByTestId("grid-announcement")).toContainText(
     "movido para domingo, 16:00 às 17:00",
   );
-  await expect(page.getByTestId("block-6-16")).toBeVisible();
+  await expect(page.getByTestId("block-6-600")).toBeVisible();
 
   await page.waitForTimeout(800);
   await page.reload();
-  await expect(page.getByTestId("block-6-16")).toBeVisible();
+  await expect(page.getByTestId("block-6-600")).toBeVisible();
 });
 
 test("cancels a keyboard drag with Escape leaving the block untouched", async ({ page }) => {
   await page.goto("/");
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-20"));
-  await expect(page.getByTestId("block-6-20")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-840"));
+  await expect(page.getByTestId("block-6-840")).toBeVisible();
   await page.waitForTimeout(800);
 
-  await page.getByTestId("block-6-20").focus();
+  await page.getByTestId("block-6-840").focus();
   await page.keyboard.press("Space");
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Escape");
 
-  await expect(page.getByTestId("block-6-20")).toBeVisible();
-  await expect(page.getByTestId("block-6-21")).toHaveCount(0);
+  await expect(page.getByTestId("block-6-840")).toBeVisible();
+  await expect(page.getByTestId("block-6-900")).toHaveCount(0);
 });
 
 test("resizes and removes a block with the keyboard, announcing both", async ({ page }) => {
   await page.goto("/");
-  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-1-8"));
-  await expect(page.getByTestId("block-1-8")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-1-120"));
+  await expect(page.getByTestId("block-1-120")).toBeVisible();
   await page.waitForTimeout(800);
 
-  await page.getByTestId("block-1-8").focus();
+  await page.getByTestId("block-1-120").focus();
   await page.keyboard.press("Shift+ArrowUp");
 
   await expect(page.getByTestId("grid-announcement")).toContainText(
     "redimensionado para terça, 08:00 às 15:00",
   );
 
-  await page.getByTestId("block-1-8").focus();
+  await page.getByTestId("block-1-120").focus();
   await page.keyboard.press("Delete");
 
-  await expect(page.getByTestId("block-1-8")).toHaveCount(0);
+  await expect(page.getByTestId("block-1-120")).toHaveCount(0);
   await expect(page.getByTestId("grid-announcement")).toContainText("removido de terça");
 });
 
 test("announces a refusal, not only a success", async ({ page }) => {
   await page.goto("/");
-  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-4-8"));
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-4-17"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-4-120"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-4-660"));
   await page.waitForTimeout(800);
 
-  await page.getByTestId("block-4-17").focus();
+  await page.getByTestId("block-4-660").focus();
   await page.keyboard.press("Space");
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
@@ -210,11 +210,11 @@ test("announces a refusal, not only a success", async ({ page }) => {
 
 test("announces the removal when a block is dragged out", async ({ page }) => {
   await page.goto("/");
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-3-19"));
-  await expect(page.getByTestId("block-3-19")).toBeVisible();
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-3-780"));
+  await expect(page.getByTestId("block-3-780")).toBeVisible();
   await page.waitForTimeout(800);
 
-  const block = await page.getByTestId("block-3-19").boundingBox();
+  const block = await page.getByTestId("block-3-780").boundingBox();
   if (block === null) {
     throw new Error("block is not visible");
   }
@@ -228,7 +228,7 @@ test("announces the removal when a block is dragged out", async ({ page }) => {
 
 test("resolves an imprecise drop inside the grid to the closest slot", async ({ page }) => {
   await page.goto("/");
-  const slot = await page.getByTestId("slot-5-11").boundingBox();
+  const slot = await page.getByTestId("slot-5-300").boundingBox();
   const source = await page.getByTestId("drawer-commitment-2").boundingBox();
   if (slot === null || source === null) {
     throw new Error("missing boxes");
@@ -341,7 +341,7 @@ test("the drawer shows no weekday and no remainder", async ({ page }) => {
 test("shows a toast while a change is saved", async ({ page }) => {
   await page.goto("/");
 
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-10"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-240"));
 
   await expect(page.getByTestId("saving-toast")).toBeVisible();
   await expect(page.getByTestId("saving-toast")).toHaveAttribute("data-state", "saved");
@@ -349,10 +349,10 @@ test("shows a toast while a change is saved", async ({ page }) => {
 
 test("previews the candidate size while the edge is dragged", async ({ page }) => {
   await page.goto("/");
-  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-6"));
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-0"));
   await page.waitForTimeout(800);
 
-  const handle = await page.getByTestId("resize-5-6").boundingBox();
+  const handle = await page.getByTestId("resize-5-0").boundingBox();
   if (handle === null) {
     throw new Error("resize handle is not visible");
   }

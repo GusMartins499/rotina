@@ -20,14 +20,14 @@ beforeEach(() => {
 });
 
 describe("commitments repository", () => {
-  it("creates a commitment with name, color and daily hours", () => {
+  it("creates a commitment with name, color and daily minutes", () => {
     const created = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
 
-    expect(created.dailyHours).toBe(8);
+    expect(created.dailyMinutes).toBe(480);
     expect(listCommitments(db)).toHaveLength(1);
   });
 
@@ -35,30 +35,30 @@ describe("commitments repository", () => {
     const created = createCommitment(db, {
       name: "Psicólogo",
       color: PALETTE[4],
-      dailyHours: null,
+      dailyMinutes: null,
     });
 
-    expect(created.dailyHours).toBeNull();
+    expect(created.dailyMinutes).toBeNull();
   });
 
   it("edits name, color and daily hours of an existing commitment", () => {
     const created = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
 
     const updated = updateCommitment(db, created.id, {
       name: "TRABALHO REMOTO",
       color: PALETTE[1],
-      dailyHours: 6,
+      dailyMinutes: 360,
     });
 
     expect(updated).toEqual(
       expect.objectContaining({
         name: "TRABALHO REMOTO",
         color: PALETTE[1],
-        dailyHours: 6,
+        dailyMinutes: 360,
       }),
     );
   });
@@ -67,7 +67,7 @@ describe("commitments repository", () => {
     const created = createCommitment(db, {
       name: "LeetCode",
       color: PALETTE[2],
-      dailyHours: 1,
+      dailyMinutes: 60,
     });
 
     deleteCommitment(db, created.id);
@@ -79,7 +79,7 @@ describe("commitments repository", () => {
     const created = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
     raw.prepare("INSERT INTO weeks (monday_date, kind) VALUES (?, ?)").run(
       "2026-09-21",
@@ -87,7 +87,7 @@ describe("commitments repository", () => {
     );
     raw
       .prepare(
-        "INSERT INTO blocks (week_id, commitment_id, weekday, start_hour, end_hour) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO blocks (week_id, commitment_id, weekday, start_minute, end_minute) VALUES (?, ?, ?, ?, ?)",
       )
       .run(1, created.id, 0, 8, 13);
 
@@ -103,7 +103,7 @@ describe("commitments repository", () => {
     const created = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
     raw.prepare("INSERT INTO weeks (monday_date, kind) VALUES (?, ?)").run(
       "2026-09-21",
@@ -112,7 +112,7 @@ describe("commitments repository", () => {
     for (const weekday of [0, 1]) {
       raw
         .prepare(
-          "INSERT INTO blocks (week_id, commitment_id, weekday, start_hour, end_hour) VALUES (?, ?, ?, ?, ?)",
+          "INSERT INTO blocks (week_id, commitment_id, weekday, start_minute, end_minute) VALUES (?, ?, ?, ?, ?)",
         )
         .run(1, created.id, weekday, 8, 13);
     }
@@ -124,16 +124,16 @@ describe("commitments repository", () => {
     const created = createCommitment(db, {
       name: "LeetCode",
       color: PALETTE[2],
-      dailyHours: 1,
+      dailyMinutes: 60,
     });
 
     expect(countBlocksOf(db, created.id)).toBe(0);
   });
 
   it("lists commitments in a stable order", () => {
-    createCommitment(db, { name: "Zelda", color: PALETTE[0], dailyHours: null });
-    createCommitment(db, { name: "Alpha", color: PALETTE[1], dailyHours: null });
-    createCommitment(db, { name: "Meio", color: PALETTE[2], dailyHours: null });
+    createCommitment(db, { name: "Zelda", color: PALETTE[0], dailyMinutes: null });
+    createCommitment(db, { name: "Alpha", color: PALETTE[1], dailyMinutes: null });
+    createCommitment(db, { name: "Meio", color: PALETTE[2], dailyMinutes: null });
 
     expect(listCommitments(db).map((c) => c.name)).toEqual(
       listCommitments(db).map((c) => c.name),

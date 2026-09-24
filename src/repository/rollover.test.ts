@@ -16,7 +16,7 @@ beforeEach(() => {
   commitmentId = createCommitment(db, {
     name: "TRABALHO",
     color: PALETTE[0],
-    dailyHours: 8,
+    dailyMinutes: 480,
   }).id;
 });
 
@@ -53,8 +53,8 @@ describe("rollover", () => {
       weekId: current.id,
       commitmentId,
       weekday: 0,
-      startHour: 8,
-      endHour: 13,
+      startMinute: 120,
+      endMinute: 420,
     });
 
     applyRollover(db, "2026-09-28");
@@ -94,7 +94,7 @@ describe("rollover", () => {
 describe("routine template", () => {
   it("saves the blocks of a week as the base routine", () => {
     const week = requireWeek(db, "2026-09-21", "current");
-    createBlock(db, { weekId: week.id, commitmentId, weekday: 0, startHour: 8, endHour: 13 });
+    createBlock(db, { weekId: week.id, commitmentId, weekday: 0, startMinute: 120, endMinute: 420 });
 
     saveTemplate(db, week.id);
 
@@ -102,15 +102,15 @@ describe("routine template", () => {
     applyTemplate(db, target.id);
 
     expect(listBlocksOfWeek(db, target.id)).toEqual([
-      expect.objectContaining({ weekday: 0, startHour: 8, endHour: 13 }),
+      expect.objectContaining({ weekday: 0, startMinute: 120, endMinute: 420 }),
     ]);
   });
 
   it("replaces the previous template when saved again", () => {
     const week = requireWeek(db, "2026-09-21", "current");
-    createBlock(db, { weekId: week.id, commitmentId, weekday: 0, startHour: 8, endHour: 13 });
+    createBlock(db, { weekId: week.id, commitmentId, weekday: 0, startMinute: 120, endMinute: 420 });
     saveTemplate(db, week.id);
-    createBlock(db, { weekId: week.id, commitmentId, weekday: 1, startHour: 9, endHour: 10 });
+    createBlock(db, { weekId: week.id, commitmentId, weekday: 1, startMinute: 180, endMinute: 240 });
     saveTemplate(db, week.id);
 
     const target = requireWeek(db, "2026-09-28", "next");
@@ -121,7 +121,7 @@ describe("routine template", () => {
 
   it("refuses to apply the template over a week that already has blocks", () => {
     const week = requireWeek(db, "2026-09-21", "current");
-    createBlock(db, { weekId: week.id, commitmentId, weekday: 0, startHour: 8, endHour: 13 });
+    createBlock(db, { weekId: week.id, commitmentId, weekday: 0, startMinute: 120, endMinute: 420 });
     saveTemplate(db, week.id);
 
     expect(() => applyTemplate(db, week.id)).toThrow(/não está vazia/i);

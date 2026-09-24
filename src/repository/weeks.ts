@@ -31,7 +31,7 @@ export function listBlocksOfWeek(db: AppDatabase, weekId: number): Block[] {
     .select()
     .from(blocks)
     .where(eq(blocks.weekId, weekId))
-    .orderBy(asc(blocks.weekday), asc(blocks.startHour))
+    .orderBy(asc(blocks.weekday), asc(blocks.startMinute))
     .all();
 }
 
@@ -42,7 +42,7 @@ export function createBlock(db: AppDatabase, values: Omit<Block, "id">): Block {
 export function updateBlock(
   db: AppDatabase,
   id: number,
-  values: Pick<Block, "weekday" | "startHour" | "endHour">,
+  values: Pick<Block, "weekday" | "startMinute" | "endMinute">,
 ): Block {
   return db.update(blocks).set(values).where(eq(blocks.id, id)).returning().get();
 }

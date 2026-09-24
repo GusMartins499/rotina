@@ -1,9 +1,9 @@
-import { FIRST_HOUR, LAST_HOUR } from "./hours";
+import { FIRST_HOUR, LAST_HOUR, MINUTES_PER_HOUR } from "./time";
 import { mondayOf, weekdayIndexOf } from "./week";
 
 export type NowMarker = {
   weekday: number;
-  offsetHours: number;
+  offsetMinutes: number;
 };
 
 export function nowMarker(nowIso: string, focusedMonday: string): NowMarker | null {
@@ -15,11 +15,11 @@ export function nowMarker(nowIso: string, focusedMonday: string): NowMarker | nu
 
   const hours = Number(nowIso.slice(11, 13));
   const minutes = Number(nowIso.slice(14, 16));
-  const offsetHours = hours + minutes / 60 - FIRST_HOUR;
+  const offsetMinutes = (hours - FIRST_HOUR) * MINUTES_PER_HOUR + minutes;
 
-  if (offsetHours < 0 || hours >= LAST_HOUR) {
+  if (offsetMinutes < 0 || hours >= LAST_HOUR) {
     return null;
   }
 
-  return { weekday: weekdayIndexOf(date), offsetHours };
+  return { weekday: weekdayIndexOf(date), offsetMinutes };
 }

@@ -19,7 +19,7 @@ export type WriteResult = { ok: true } | { ok: false; error: string };
 export type DropTarget = {
   commitmentId: number;
   weekday: number;
-  startHour: number;
+  startMinute: number;
 };
 
 type Options = {
@@ -28,8 +28,8 @@ type Options = {
   allocate: (input: {
     commitmentId: number;
     weekday: number;
-    startHour: number;
-    endHour: number;
+    startMinute: number;
+    endMinute: number;
   }) => Promise<AllocateResult>;
   move?: (id: number, values: Placement) => Promise<WriteResult>;
   resize?: (id: number, values: Placement) => Promise<WriteResult>;
@@ -42,7 +42,7 @@ const NOOP = async (): Promise<WriteResult> => ({ ok: true });
 
 function signatureOf(blocks: PlacedBlock[]): string {
   return blocks
-    .map((block) => `${block.commitmentId}:${block.weekday}:${block.startHour}:${block.endHour}`)
+    .map((block) => `${block.commitmentId}:${block.weekday}:${block.startMinute}:${block.endMinute}`)
     .join("|");
 }
 
@@ -114,8 +114,8 @@ export function useAllocation({
 
     const after: Placement = {
       weekday: plan.weekday,
-      startHour: plan.startHour,
-      endHour: plan.endHour,
+      startMinute: plan.startMinute,
+      endMinute: plan.endMinute,
     };
 
     await persist(
@@ -137,7 +137,7 @@ export function useAllocation({
     const plan = planAllocation({
       commitment,
       weekday: target.weekday,
-      startHour: target.startHour,
+      startMinute: target.startMinute,
       existing: blocks,
     });
 
@@ -150,8 +150,8 @@ export function useAllocation({
       id: null,
       commitmentId: target.commitmentId,
       weekday: target.weekday,
-      startHour: plan.startHour,
-      endHour: plan.endHour,
+      startMinute: plan.startMinute,
+      endMinute: plan.endMinute,
     };
 
     await persist(
@@ -160,8 +160,8 @@ export function useAllocation({
         const result = await allocate({
           commitmentId: target.commitmentId,
           weekday: target.weekday,
-          startHour: plan.startHour,
-          endHour: plan.endHour,
+          startMinute: plan.startMinute,
+          endMinute: plan.endMinute,
         });
 
         if (result.ok && result.block !== null) {
@@ -184,10 +184,10 @@ export function useAllocation({
     error,
     announcement,
     allocate: place,
-    move: (target: PlacedBlock, to: { weekday: number; startHour: number }) =>
+    move: (target: PlacedBlock, to: { weekday: number; startMinute: number }) =>
       rearrange(target, planMove(target, to, blocks), persistMove, announceMove),
-    resize: (target: PlacedBlock, endHour: number) =>
-      rearrange(target, planResize(target, endHour, blocks), persistResize, announceResize),
+    resize: (target: PlacedBlock, endMinute: number) =>
+      rearrange(target, planResize(target, endMinute, blocks), persistResize, announceResize),
     remove: async (target: PlacedBlock) => {
       setError(null);
       await persist(

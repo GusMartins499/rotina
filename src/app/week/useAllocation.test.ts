@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { useAllocation } from "./useAllocation";
 
-const trabalho = { id: 1, name: "TRABALHO", color: "#d73a4a", dailyHours: 8, createdAt: "" };
-const psicologo = { id: 2, name: "Psicólogo", color: "#8250df", dailyHours: null, createdAt: "" };
+const trabalho = { id: 1, name: "TRABALHO", color: "#d73a4a", dailyMinutes: 480, createdAt: "" };
+const psicologo = { id: 2, name: "Psicólogo", color: "#8250df", dailyMinutes: null, createdAt: "" };
 
 const setup = (allocate = vi.fn().mockResolvedValue({ ok: true, block: null })) =>
   renderHook(() =>
@@ -17,8 +17,8 @@ const setup = (allocate = vi.fn().mockResolvedValue({ ok: true, block: null })) 
 describe("syncing with the server", () => {
   it("replaces the blocks when the week in focus changes", () => {
     const allocate = vi.fn();
-    const first = [{ id: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 16 }];
-    const second = [{ id: 2, commitmentId: 2, weekday: 3, startHour: 9, endHour: 10 }];
+    const first = [{ id: 1, commitmentId: 1, weekday: 0, startMinute: 120, endMinute: 600 }];
+    const second = [{ id: 2, commitmentId: 2, weekday: 3, startMinute: 180, endMinute: 240 }];
 
     const { result, rerender } = renderHook(
       ({ initialBlocks }) =>
@@ -43,7 +43,7 @@ describe("syncing with the server", () => {
     );
 
     await act(async () => {
-      await result.current.allocate({ commitmentId: 2, weekday: 1, startHour: 18 });
+      await result.current.allocate({ commitmentId: 2, weekday: 1, startMinute: 720 });
     });
     rerender();
 
@@ -56,23 +56,23 @@ describe("allocation state", () => {
     const { result } = setup();
 
     await act(async () => {
-      await result.current.allocate({ commitmentId: 1, weekday: 0, startHour: 8 });
+      await result.current.allocate({ commitmentId: 1, weekday: 0, startMinute: 120 });
     });
 
     expect(result.current.blocks).toEqual([
-      expect.objectContaining({ weekday: 0, startHour: 8, endHour: 16, commitmentId: 1 }),
+      expect.objectContaining({ weekday: 0, startMinute: 120, endMinute: 600, commitmentId: 1 }),
     ]);
   });
 
-  it("adds a one hour block for a commitment without daily hours", async () => {
+  it("adds a one hour block for a commitment without daily minutes", async () => {
     const { result } = setup();
 
     await act(async () => {
-      await result.current.allocate({ commitmentId: 2, weekday: 1, startHour: 18 });
+      await result.current.allocate({ commitmentId: 2, weekday: 1, startMinute: 720 });
     });
 
     expect(result.current.blocks[0]).toEqual(
-      expect.objectContaining({ startHour: 18, endHour: 19 }),
+      expect.objectContaining({ startMinute: 720, endMinute: 780 }),
     );
   });
 
@@ -81,10 +81,10 @@ describe("allocation state", () => {
     const { result } = setup(allocate);
 
     await act(async () => {
-      await result.current.allocate({ commitmentId: 1, weekday: 0, startHour: 8 });
+      await result.current.allocate({ commitmentId: 1, weekday: 0, startMinute: 120 });
     });
     await act(async () => {
-      await result.current.allocate({ commitmentId: 2, weekday: 0, startHour: 12 });
+      await result.current.allocate({ commitmentId: 2, weekday: 0, startMinute: 360 });
     });
 
     expect(result.current.blocks).toHaveLength(1);
@@ -97,7 +97,7 @@ describe("allocation state", () => {
     const { result } = setup(allocate);
 
     await act(async () => {
-      await result.current.allocate({ commitmentId: 1, weekday: 0, startHour: 22 });
+      await result.current.allocate({ commitmentId: 1, weekday: 0, startMinute: 960 });
     });
 
     expect(result.current.blocks).toHaveLength(0);
@@ -115,7 +115,7 @@ describe("allocation state", () => {
     const { result } = setup(allocate);
 
     act(() => {
-      void result.current.allocate({ commitmentId: 1, weekday: 0, startHour: 8 });
+      void result.current.allocate({ commitmentId: 1, weekday: 0, startMinute: 120 });
     });
 
     await waitFor(() => expect(result.current.saving).toBe(true));
@@ -133,7 +133,7 @@ describe("allocation state", () => {
     const { result } = setup(allocate);
 
     await act(async () => {
-      await result.current.allocate({ commitmentId: 1, weekday: 0, startHour: 8 });
+      await result.current.allocate({ commitmentId: 1, weekday: 0, startMinute: 120 });
     });
 
     expect(result.current.blocks).toHaveLength(0);

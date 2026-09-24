@@ -31,19 +31,19 @@ describe("weeks repository", () => {
     const commitment = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
 
     createBlock(db, {
       weekId: week.id,
       commitmentId: commitment.id,
       weekday: 0,
-      startHour: 8,
-      endHour: 16,
+      startMinute: 120,
+      endMinute: 600,
     });
 
     expect(listBlocksOfWeek(db, week.id)).toEqual([
-      expect.objectContaining({ weekday: 0, startHour: 8, endHour: 16 }),
+      expect.objectContaining({ weekday: 0, startMinute: 120, endMinute: 600 }),
     ]);
   });
 
@@ -52,14 +52,14 @@ describe("weeks repository", () => {
     const commitment = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
     createBlock(db, {
       weekId: week.id,
       commitmentId: commitment.id,
       weekday: 0,
-      startHour: 8,
-      endHour: 13,
+      startMinute: 120,
+      endMinute: 420,
     });
 
     expect(() =>
@@ -67,8 +67,8 @@ describe("weeks repository", () => {
         weekId: week.id,
         commitmentId: commitment.id,
         weekday: 0,
-        startHour: 12,
-        endHour: 14,
+        startMinute: 360,
+        endMinute: 480,
       }),
     ).toThrow();
   });
@@ -78,20 +78,20 @@ describe("weeks repository", () => {
     const commitment = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
     const block = createBlock(db, {
       weekId: week.id,
       commitmentId: commitment.id,
       weekday: 0,
-      startHour: 8,
-      endHour: 13,
+      startMinute: 120,
+      endMinute: 420,
     });
 
-    updateBlock(db, block.id, { weekday: 1, startHour: 9, endHour: 14 });
+    updateBlock(db, block.id, { weekday: 1, startMinute: 180, endMinute: 480 });
 
     expect(listBlocksOfWeek(db, week.id)).toEqual([
-      expect.objectContaining({ weekday: 1, startHour: 9, endHour: 14 }),
+      expect.objectContaining({ weekday: 1, startMinute: 180, endMinute: 480 }),
     ]);
   });
 
@@ -100,25 +100,25 @@ describe("weeks repository", () => {
     const commitment = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
     const first = createBlock(db, {
       weekId: week.id,
       commitmentId: commitment.id,
       weekday: 0,
-      startHour: 8,
-      endHour: 13,
+      startMinute: 120,
+      endMinute: 420,
     });
     createBlock(db, {
       weekId: week.id,
       commitmentId: commitment.id,
       weekday: 0,
-      startHour: 14,
-      endHour: 17,
+      startMinute: 480,
+      endMinute: 660,
     });
 
     expect(() =>
-      updateBlock(db, first.id, { weekday: 0, startHour: 8, endHour: 15 }),
+      updateBlock(db, first.id, { weekday: 0, startMinute: 120, endMinute: 540 }),
     ).toThrow();
   });
 
@@ -127,14 +127,14 @@ describe("weeks repository", () => {
     const commitment = createCommitment(db, {
       name: "TRABALHO",
       color: PALETTE[0],
-      dailyHours: 8,
+      dailyMinutes: 480,
     });
     const block = createBlock(db, {
       weekId: week.id,
       commitmentId: commitment.id,
       weekday: 0,
-      startHour: 8,
-      endHour: 13,
+      startMinute: 120,
+      endMinute: 420,
     });
 
     deleteBlock(db, block.id);
@@ -145,8 +145,8 @@ describe("weeks repository", () => {
         weekId: week.id,
         commitmentId: commitment.id,
         weekday: 0,
-        startHour: 8,
-        endHour: 13,
+        startMinute: 120,
+        endMinute: 420,
       }),
     ).not.toThrow();
   });
@@ -156,9 +156,9 @@ describe("weeks repository", () => {
     const commitment = createCommitment(db, {
       name: "FLASHCARDS",
       color: PALETTE[1],
-      dailyHours: 1,
+      dailyMinutes: 60,
     });
-    for (const [weekday, startHour] of [
+    for (const [weekday, startMinute] of [
       [1, 9],
       [0, 20],
       [0, 7],
@@ -167,12 +167,12 @@ describe("weeks repository", () => {
         weekId: week.id,
         commitmentId: commitment.id,
         weekday,
-        startHour,
-        endHour: startHour + 1,
+        startMinute,
+        endMinute: startMinute + 1,
       });
     }
 
-    expect(listBlocksOfWeek(db, week.id).map((b) => [b.weekday, b.startHour])).toEqual([
+    expect(listBlocksOfWeek(db, week.id).map((b) => [b.weekday, b.startMinute])).toEqual([
       [0, 7],
       [0, 20],
       [1, 9],

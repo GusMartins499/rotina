@@ -1,6 +1,7 @@
 "use client";
 
 import { weeklyLoadFor } from "../../domain/load";
+import { formatDuration } from "../../domain/time";
 import type { Commitment } from "../../repository/schema";
 import type { PlacedBlock } from "./useAllocation";
 
@@ -17,7 +18,7 @@ export function WeeklyLoadPanel({ commitments, blocks }: Props) {
         {commitments.map((commitment) => (
           <li key={commitment.id} data-testid={`weekly-load-${commitment.id}`}>
             <span>{commitment.name}</span>
-            <strong>{weeklyLoadFor(commitment, blocks)}h</strong>
+            <strong>{formatDuration(weeklyLoadFor(commitment, blocks))}</strong>
           </li>
         ))}
       </ul>

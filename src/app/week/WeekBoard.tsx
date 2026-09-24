@@ -23,7 +23,7 @@ import {
   type WriteResult,
 } from "./useAllocation";
 
-type Placement = { weekday: number; startHour: number; endHour: number };
+type Placement = { weekday: number; startMinute: number; endMinute: number };
 
 type Focus = "current" | "next";
 
@@ -41,9 +41,9 @@ type Props = {
   remove: (id: number) => Promise<WriteResult>;
 };
 
-function parseSlot(id: string): { weekday: number; startHour: number } | null {
+function parseSlot(id: string): { weekday: number; startMinute: number } | null {
   const match = /^slot-(\d+)-(\d+)$/.exec(id);
-  return match === null ? null : { weekday: Number(match[1]), startHour: Number(match[2]) };
+  return match === null ? null : { weekday: Number(match[1]), startMinute: Number(match[2]) };
 }
 
 function parseCommitment(id: string): number | null {
@@ -120,7 +120,7 @@ export function WeekBoard({
         <WeekGrid
           blocks={week.blocks}
           commitments={commitments}
-          onResize={(block, endHour) => void week.resize(block, endHour)}
+          onResize={(block, endMinute) => void week.resize(block, endMinute)}
           onRemove={(block) => void week.remove(block)}
           onMove={(block, to) => void week.move(block, to)}
           now={now}

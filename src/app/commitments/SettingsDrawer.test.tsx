@@ -4,8 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { SettingsDrawer } from "./SettingsDrawer";
 
 const commitments = [
-  { id: 1, name: "TRABALHO", color: "#d73a4a", dailyHours: 8, createdAt: "" },
-  { id: 2, name: "Psicólogo", color: "#8250df", dailyHours: null, createdAt: "" },
+  { id: 1, name: "TRABALHO", color: "#d73a4a", dailyMinutes: 480, createdAt: "" },
+  { id: 2, name: "Psicólogo", color: "#8250df", dailyMinutes: null, createdAt: "" },
 ];
 
 const renderDrawer = () =>

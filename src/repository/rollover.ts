@@ -50,8 +50,8 @@ export function saveTemplate(db: AppDatabase, weekId: number): void {
         .values({
           commitmentId: block.commitmentId,
           weekday: block.weekday,
-          startHour: block.startHour,
-          endHour: block.endHour,
+          startMinute: block.startMinute,
+          endMinute: block.endMinute,
         })
         .run();
     }
@@ -72,8 +72,8 @@ export function applyTemplate(db: AppDatabase, weekId: number): void {
           weekId,
           commitmentId: block.commitmentId,
           weekday: block.weekday,
-          startHour: block.startHour,
-          endHour: block.endHour,
+          startMinute: block.startMinute,
+          endMinute: block.endMinute,
         })
         .run();
     }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HOURS_PER_DAY } from "./hours";
+import { MINUTES_PER_DAY, STEP_MINUTES } from "./time";
 
 export const PALETTE = [
   "#d73a4a",
@@ -17,7 +17,13 @@ export type PaletteColor = (typeof PALETTE)[number];
 export const commitmentInputSchema = z.object({
   name: z.string().trim().min(1),
   color: z.enum(PALETTE),
-  dailyHours: z.number().int().min(1).max(HOURS_PER_DAY).nullable(),
+  dailyMinutes: z
+    .number()
+    .int()
+    .min(STEP_MINUTES)
+    .max(MINUTES_PER_DAY)
+    .refine((value) => value % STEP_MINUTES === 0)
+    .nullable(),
 });
 
 export type CommitmentInput = z.infer<typeof commitmentInputSchema>;

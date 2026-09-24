@@ -10,28 +10,28 @@ const trabalho: Commitment = {
   id: 1,
   name: "TRABALHO",
   color: "#d73a4a",
-  dailyHours: 8,
+  dailyMinutes: 480,
   createdAt: "",
 };
 const flashcards: Commitment = {
   id: 2,
   name: "FLASHCARDS",
   color: "#0969da",
-  dailyHours: 1,
+  dailyMinutes: 60,
   createdAt: "",
 };
 
 const blocks: PlacedBlock[] = [
-  { id: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 13 },
-  { id: 2, commitmentId: 2, weekday: 0, startHour: 20, endHour: 21 },
-  { id: 3, commitmentId: 2, weekday: 1, startHour: 9, endHour: 10 },
+  { id: 1, commitmentId: 1, weekday: 0, startMinute: 120, endMinute: 420 },
+  { id: 2, commitmentId: 2, weekday: 0, startMinute: 840, endMinute: 900 },
+  { id: 3, commitmentId: 2, weekday: 1, startMinute: 180, endMinute: 240 },
 ];
 
 const renderGrid = (
   handlers: {
-    onResize?: (block: PlacedBlock, endHour: number) => void;
+    onResize?: (block: PlacedBlock, endMinute: number) => void;
     onRemove?: (block: PlacedBlock) => void;
-    onMove?: (block: PlacedBlock, to: { weekday: number; startHour: number }) => void;
+    onMove?: (block: PlacedBlock, to: { weekday: number; startMinute: number }) => void;
   } = {},
 ) =>
   render(
@@ -51,19 +51,19 @@ describe("keyboard operable grid", () => {
     renderGrid();
 
     await userEvent.tab();
-    expect(screen.getByTestId("block-0-8")).toHaveFocus();
+    expect(screen.getByTestId("block-0-120")).toHaveFocus();
 
     await userEvent.tab();
-    expect(screen.getByTestId("block-0-20")).toHaveFocus();
+    expect(screen.getByTestId("block-0-840")).toHaveFocus();
 
     await userEvent.tab();
-    expect(screen.getByTestId("block-1-9")).toHaveFocus();
+    expect(screen.getByTestId("block-1-180")).toHaveFocus();
   });
 
   it("exposes each block with an accessible name carrying commitment and time", () => {
     renderGrid();
 
-    expect(screen.getByTestId("block-0-8")).toHaveAccessibleName(
+    expect(screen.getByTestId("block-0-120")).toHaveAccessibleName(
       "TRABALHO, segunda, 08:00 às 13:00",
     );
   });
@@ -72,27 +72,27 @@ describe("keyboard operable grid", () => {
     const onResize = vi.fn();
     renderGrid({ onResize });
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard("{Shift>}{ArrowUp}{/Shift}");
 
-    expect(onResize).toHaveBeenCalledWith(blocks[0], 12);
+    expect(onResize).toHaveBeenCalledWith(blocks[0], 360);
   });
 
   it("grows a focused block with Shift and ArrowDown", async () => {
     const onResize = vi.fn();
     renderGrid({ onResize });
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard("{Shift>}{ArrowDown}{/Shift}");
 
-    expect(onResize).toHaveBeenCalledWith(blocks[0], 14);
+    expect(onResize).toHaveBeenCalledWith(blocks[0], 480);
   });
 
   it("removes a focused block with Delete", async () => {
     const onRemove = vi.fn();
     renderGrid({ onRemove });
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard("{Delete}");
 
     expect(onRemove).toHaveBeenCalledWith(blocks[0]);
@@ -102,7 +102,7 @@ describe("keyboard operable grid", () => {
     const onResize = vi.fn();
     renderGrid({ onResize });
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard("{ArrowUp}");
 
     expect(onResize).not.toHaveBeenCalled();
@@ -112,51 +112,51 @@ describe("keyboard operable grid", () => {
     const onMove = vi.fn();
     renderGrid({ onMove });
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard(" ");
     await userEvent.keyboard("{ArrowRight}");
     await userEvent.keyboard(" ");
 
-    expect(onMove).toHaveBeenCalledWith(blocks[0], { weekday: 1, startHour: 8 });
+    expect(onMove).toHaveBeenCalledWith(blocks[0], { weekday: 1, startMinute: 120 });
   });
 
   it("marks the grabbed block while it is picked up", async () => {
     renderGrid();
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard(" ");
 
-    expect(screen.getByTestId("block-0-8")).toHaveAttribute("aria-grabbed", "true");
+    expect(screen.getByTestId("block-0-120")).toHaveAttribute("aria-grabbed", "true");
   });
 
   it("highlights the slot the cursor is over", async () => {
     renderGrid();
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard(" ");
     await userEvent.keyboard("{ArrowRight}");
 
-    expect(screen.getByTestId("slot-1-8")).toHaveAttribute("data-cursor", "true");
+    expect(screen.getByTestId("slot-1-120")).toHaveAttribute("data-cursor", "true");
   });
 
   it("cancels a keyboard drag with Escape leaving the block untouched", async () => {
     const onMove = vi.fn();
     renderGrid({ onMove });
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard(" ");
     await userEvent.keyboard("{ArrowRight}");
     await userEvent.keyboard("{Escape}");
 
     expect(onMove).not.toHaveBeenCalled();
-    expect(screen.getByTestId("block-0-8")).toHaveAttribute("aria-grabbed", "false");
+    expect(screen.getByTestId("block-0-120")).toHaveAttribute("aria-grabbed", "false");
   });
 
   it("does not move when the block is dropped where it started", async () => {
     const onMove = vi.fn();
     renderGrid({ onMove });
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard(" ");
     await userEvent.keyboard(" ");
 
@@ -166,26 +166,26 @@ describe("keyboard operable grid", () => {
   it("keeps focus on the block after it is dropped", async () => {
     renderGrid();
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard(" ");
     await userEvent.keyboard("{ArrowRight}");
     await userEvent.keyboard(" ");
 
-    expect(screen.getByTestId("block-0-8")).toHaveFocus();
+    expect(screen.getByTestId("block-0-120")).toHaveFocus();
   });
 
   it("ignores arrow keys when no block is grabbed", async () => {
     renderGrid();
 
-    screen.getByTestId("block-0-8").focus();
+    screen.getByTestId("block-0-120").focus();
     await userEvent.keyboard("{ArrowRight}");
 
-    expect(screen.queryByTestId("slot-1-8")).not.toHaveAttribute("data-cursor");
+    expect(screen.queryByTestId("slot-1-120")).not.toHaveAttribute("data-cursor");
   });
 
   it("keeps slots out of the tab order", async () => {
     renderGrid();
 
-    expect(screen.getByTestId("slot-3-10")).not.toHaveAttribute("tabindex");
+    expect(screen.getByTestId("slot-3-240")).not.toHaveAttribute("tabindex");
   });
 });

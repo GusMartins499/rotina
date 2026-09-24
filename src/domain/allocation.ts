@@ -1,22 +1,25 @@
-import { FIRST_HOUR, LAST_HOUR, type HourInterval } from "./hours";
+import { MINUTES_PER_DAY, MINUTES_PER_HOUR, type MinuteInterval } from "./time";
 import { overlaps } from "./overlaps";
 
 export type AllocationTarget = {
-  commitment: { id: number; dailyHours: number | null };
+  commitment: { id: number; dailyMinutes: number | null };
   weekday: number;
-  startHour: number;
-  existing: (HourInterval & { weekday: number })[];
+  startMinute: number;
+  existing: (MinuteInterval & { weekday: number })[];
 };
 
 export type AllocationPlan =
-  | { ok: true; startHour: number; endHour: number }
+  | { ok: true; startMinute: number; endMinute: number }
   | { ok: false; reason: "overlap" | "out-of-day" };
 
 export function planAllocation(target: AllocationTarget): AllocationPlan {
-  const duration = target.commitment.dailyHours ?? 1;
-  const interval = { startHour: target.startHour, endHour: target.startHour + duration };
+  const duration = target.commitment.dailyMinutes ?? MINUTES_PER_HOUR;
+  const interval = {
+    startMinute: target.startMinute,
+    endMinute: target.startMinute + duration,
+  };
 
-  if (interval.startHour < FIRST_HOUR || interval.endHour > LAST_HOUR) {
+  if (interval.startMinute < 0 || interval.endMinute > MINUTES_PER_DAY) {
     return { ok: false, reason: "out-of-day" };
   }
 

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { FIRST_HOUR, LAST_HOUR } from "../../domain/hours";
+import { MINUTES_PER_DAY, MINUTES_PER_HOUR } from "../../domain/time";
 import type { PlacedBlock } from "./useAllocation";
 
 export type Cursor = {
   id: number | null;
   weekday: number;
-  startHour: number;
+  startMinute: number;
 };
 
 function clamp(value: number, min: number, max: number): number {
@@ -20,7 +20,7 @@ export function useKeyboardCursor() {
   return {
     cursor,
     grab: (block: PlacedBlock) =>
-      setCursor({ id: block.id, weekday: block.weekday, startHour: block.startHour }),
+      setCursor({ id: block.id, weekday: block.weekday, startMinute: block.startMinute }),
     release: () => setCursor(null),
     nudge: (weekdays: number, hours: number) =>
       setCursor((current) =>
@@ -29,7 +29,11 @@ export function useKeyboardCursor() {
           : {
               ...current,
               weekday: clamp(current.weekday + weekdays, 0, 6),
-              startHour: clamp(current.startHour + hours, FIRST_HOUR, LAST_HOUR - 1),
+              startMinute: clamp(
+                current.startMinute + hours * MINUTES_PER_HOUR,
+                0,
+                MINUTES_PER_DAY - MINUTES_PER_HOUR,
+              ),
             },
       ),
   };
