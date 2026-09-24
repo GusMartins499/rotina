@@ -14,6 +14,43 @@ const setup = (allocate = vi.fn().mockResolvedValue({ ok: true, block: null })) 
     }),
   );
 
+describe("syncing with the server", () => {
+  it("replaces the blocks when the week in focus changes", () => {
+    const allocate = vi.fn();
+    const first = [{ id: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 16 }];
+    const second = [{ id: 2, commitmentId: 2, weekday: 3, startHour: 9, endHour: 10 }];
+
+    const { result, rerender } = renderHook(
+      ({ initialBlocks }) =>
+        useAllocation({ initialBlocks, commitments: [trabalho, psicologo], allocate }),
+      { initialProps: { initialBlocks: first } },
+    );
+
+    expect(result.current.blocks).toEqual(first);
+
+    rerender({ initialBlocks: second });
+
+    expect(result.current.blocks).toEqual(second);
+  });
+
+  it("keeps local changes while the server data is unchanged", async () => {
+    const allocate = vi.fn().mockResolvedValue({ ok: true, block: null });
+    const initialBlocks: never[] = [];
+
+    const { result, rerender } = renderHook(
+      () => useAllocation({ initialBlocks, commitments: [trabalho, psicologo], allocate }),
+      {},
+    );
+
+    await act(async () => {
+      await result.current.allocate({ commitmentId: 2, weekday: 1, startHour: 18 });
+    });
+    rerender();
+
+    expect(result.current.blocks).toHaveLength(1);
+  });
+});
+
 describe("allocation state", () => {
   it("adds a block sized by the commitment daily hours", async () => {
     const { result } = setup();

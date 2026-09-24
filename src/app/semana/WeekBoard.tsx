@@ -6,6 +6,7 @@ import type { Commitment } from "../../repository/schema";
 import { CommitmentDrawer } from "./CommitmentDrawer";
 import { WeekGrid } from "./WeekGrid";
 import { WeeklyLoadPanel } from "./WeeklyLoadPanel";
+import { RoutineTemplate } from "./RoutineTemplate";
 import {
   useAllocation,
   type AllocateResult,
@@ -15,11 +16,16 @@ import {
 
 type Placement = { weekday: number; startHour: number; endHour: number };
 
+type Focus = "current" | "next";
+
 type Props = {
   weekLabel: string;
+  focus: Focus;
+  saveTemplate: (focus: Focus) => Promise<WriteResult>;
+  applyTemplate: (focus: Focus) => Promise<WriteResult>;
   commitments: Commitment[];
   initialBlocks: PlacedBlock[];
-  allocate: (input: Placement & { commitmentId: number }) => Promise<AllocateResult>;
+  allocate: (input: Placement & { commitmentId: number; focus: Focus }) => Promise<AllocateResult>;
   move: (id: number, values: Placement) => Promise<WriteResult>;
   resize: (id: number, values: Placement) => Promise<WriteResult>;
   remove: (id: number) => Promise<WriteResult>;
@@ -35,8 +41,26 @@ function parseCommitment(id: string): number | null {
   return match === null ? null : Number(match[1]);
 }
 
-export function WeekBoard({ weekLabel, commitments, initialBlocks, ...persistence }: Props) {
-  const week = useAllocation({ initialBlocks, commitments, ...persistence });
+export function WeekBoard({
+  weekLabel,
+  focus,
+  commitments,
+  initialBlocks,
+  allocate,
+  move,
+  resize,
+  remove,
+  saveTemplate,
+  applyTemplate,
+}: Props) {
+  const week = useAllocation({
+    initialBlocks,
+    commitments,
+    allocate: (input) => allocate({ ...input, focus }),
+    move,
+    resize,
+    remove,
+  });
   const [focusedWeekday, setFocusedWeekday] = useState(0);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
@@ -87,6 +111,11 @@ export function WeekBoard({ weekLabel, commitments, initialBlocks, ...persistenc
             focusedWeekday={focusedWeekday}
           />
           <WeeklyLoadPanel commitments={commitments} blocks={week.blocks} />
+          <RoutineTemplate
+            onSave={() => saveTemplate(focus)}
+            onApply={() => applyTemplate(focus)}
+            canApply={week.blocks.length === 0}
+          />
         </div>
       </div>
     </DndContext>

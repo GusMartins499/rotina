@@ -40,6 +40,12 @@ const REFUSAL = {
 
 const NOOP = async (): Promise<WriteResult> => ({ ok: true });
 
+function signatureOf(blocks: PlacedBlock[]): string {
+  return blocks
+    .map((block) => `${block.commitmentId}:${block.weekday}:${block.startHour}:${block.endHour}`)
+    .join("|");
+}
+
 export function useAllocation({
   initialBlocks,
   commitments,
@@ -49,8 +55,16 @@ export function useAllocation({
   remove: persistRemove = NOOP,
 }: Options) {
   const [blocks, setBlocks] = useState<PlacedBlock[]>(initialBlocks);
+  const [syncedFrom, setSyncedFrom] = useState(() => signatureOf(initialBlocks));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const signature = signatureOf(initialBlocks);
+  if (syncedFrom !== signature) {
+    setSyncedFrom(signature);
+    setBlocks(initialBlocks);
+    setError(null);
+  }
 
   async function persist(
     optimistic: () => void,

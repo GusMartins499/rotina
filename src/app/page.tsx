@@ -1,10 +1,18 @@
+import Link from "next/link";
 import { mondayOf } from "../domain/week";
 import { listCommitments } from "../repository/commitments";
 import { getDatabase } from "../repository/db";
-import { listBlocksOfWeek, requireWeek } from "../repository/weeks";
+import { applyRollover } from "../repository/rollover";
+import { ensureWeekPair, listBlocksOfWeek } from "../repository/weeks";
 import { WeekBoard } from "./semana/WeekBoard";
-import { allocateBlockAction, moveBlockAction, removeBlockAction } from "./semana/actions";
-import Link from "next/link";
+import { WeekSwitcher } from "./semana/WeekSwitcher";
+import {
+  allocateBlockAction,
+  applyTemplateAction,
+  moveBlockAction,
+  removeBlockAction,
+  saveTemplateAction,
+} from "./semana/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,24 +25,38 @@ function weekLabel(mondayDate: string): string {
   return `Semana do dia ${format(monday)} até ${format(sunday)} de ${monday.getUTCFullYear()}`;
 }
 
-export default function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ semana?: string }>;
+}) {
+  const focus = (await searchParams).semana === "proxima" ? "next" : "current";
+
   const db = getDatabase();
-  const monday = mondayOf(new Date().toISOString().slice(0, 10));
-  const week = requireWeek(db, monday);
+  const today = new Date().toISOString().slice(0, 10);
+  applyRollover(db, today);
+
+  const pair = ensureWeekPair(db, mondayOf(today));
+  const week = focus === "next" ? pair.next : pair.current;
+  const blocks = listBlocksOfWeek(db, week.id);
 
   return (
     <>
       <nav>
         <Link href="/compromissos">Gerenciar compromissos</Link>
       </nav>
+      <WeekSwitcher focus={focus} />
       <WeekBoard
-        weekLabel={weekLabel(monday)}
+        weekLabel={weekLabel(week.mondayDate)}
+        focus={focus}
         commitments={listCommitments(db)}
-        initialBlocks={listBlocksOfWeek(db, week.id)}
+        initialBlocks={blocks}
         allocate={allocateBlockAction}
         move={moveBlockAction}
         resize={moveBlockAction}
         remove={removeBlockAction}
+        saveTemplate={saveTemplateAction}
+        applyTemplate={applyTemplateAction}
       />
     </>
   );
