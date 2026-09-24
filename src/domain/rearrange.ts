@@ -1,27 +1,27 @@
-import { FIRST_HOUR, LAST_HOUR, durationOf } from "./hours";
+import { MINUTES_PER_DAY, durationOf } from "./time";
 import { overlaps } from "./overlaps";
 
 export type PlacedInterval = {
   id: number | null;
   commitmentId: number;
   weekday: number;
-  startHour: number;
-  endHour: number;
+  startMinute: number;
+  endMinute: number;
 };
 
 export type RearrangePlan =
-  | { ok: true; weekday: number; startHour: number; endHour: number }
+  | { ok: true; weekday: number; startMinute: number; endMinute: number }
   | { ok: false; reason: "overlap" | "out-of-day" | "empty" };
 
 function settle(
-  candidate: { weekday: number; startHour: number; endHour: number },
+  candidate: { weekday: number; startMinute: number; endMinute: number },
   moved: PlacedInterval,
   existing: PlacedInterval[],
 ): RearrangePlan {
-  if (candidate.endHour <= candidate.startHour) {
+  if (candidate.endMinute <= candidate.startMinute) {
     return { ok: false, reason: "empty" };
   }
-  if (candidate.startHour < FIRST_HOUR || candidate.endHour > LAST_HOUR) {
+  if (candidate.startMinute < 0 || candidate.endMinute > MINUTES_PER_DAY) {
     return { ok: false, reason: "out-of-day" };
   }
 
@@ -36,14 +36,14 @@ function settle(
 
 export function planMove(
   block: PlacedInterval,
-  target: { weekday: number; startHour: number },
+  target: { weekday: number; startMinute: number },
   existing: PlacedInterval[],
 ): RearrangePlan {
   return settle(
     {
       weekday: target.weekday,
-      startHour: target.startHour,
-      endHour: target.startHour + durationOf(block),
+      startMinute: target.startMinute,
+      endMinute: target.startMinute + durationOf(block),
     },
     block,
     existing,
@@ -52,11 +52,11 @@ export function planMove(
 
 export function planResize(
   block: PlacedInterval,
-  endHour: number,
+  endMinute: number,
   existing: PlacedInterval[],
 ): RearrangePlan {
   return settle(
-    { weekday: block.weekday, startHour: block.startHour, endHour },
+    { weekday: block.weekday, startMinute: block.startMinute, endMinute },
     block,
     existing,
   );

@@ -1,38 +1,38 @@
 import { describe, it, expect } from "vitest";
 import { planAllocation } from "./allocation";
 
-const trabalho = { id: 1, dailyHours: 8 };
-const psicologo = { id: 2, dailyHours: null };
+const trabalho = { id: 1, dailyMinutes: 480 };
+const psicologo = { id: 2, dailyMinutes: null };
 
 describe("allocation planning", () => {
   it("sizes the block by the commitment daily hours", () => {
     const plan = planAllocation({
       commitment: trabalho,
       weekday: 0,
-      startHour: 8,
+      startMinute: 120,
       existing: [],
     });
 
-    expect(plan).toEqual({ ok: true, startHour: 8, endHour: 16 });
+    expect(plan).toEqual({ ok: true, startMinute: 120, endMinute: 600 });
   });
 
-  it("sizes a commitment without daily hours as one hour", () => {
+  it("sizes a commitment without daily minutes as one hour", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 1,
-      startHour: 18,
+      startMinute: 720,
       existing: [],
     });
 
-    expect(plan).toEqual({ ok: true, startHour: 18, endHour: 19 });
+    expect(plan).toEqual({ ok: true, startMinute: 720, endMinute: 780 });
   });
 
   it("refuses an allocation that overlaps an existing block", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 0,
-      startHour: 12,
-      existing: [{ weekday: 0, startHour: 8, endHour: 13 }],
+      startMinute: 360,
+      existing: [{ weekday: 0, startMinute: 120, endMinute: 420 }],
     });
 
     expect(plan).toEqual({ ok: false, reason: "overlap" });
@@ -42,8 +42,8 @@ describe("allocation planning", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 1,
-      startHour: 12,
-      existing: [{ weekday: 0, startHour: 8, endHour: 13 }],
+      startMinute: 360,
+      existing: [{ weekday: 0, startMinute: 120, endMinute: 420 }],
     });
 
     expect(plan.ok).toBe(true);
@@ -53,7 +53,7 @@ describe("allocation planning", () => {
     const plan = planAllocation({
       commitment: trabalho,
       weekday: 0,
-      startHour: 22,
+      startMinute: 960,
       existing: [],
     });
 
@@ -64,19 +64,19 @@ describe("allocation planning", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 0,
-      startHour: 22,
+      startMinute: 960,
       existing: [],
     });
 
-    expect(plan).toEqual({ ok: true, startHour: 22, endHour: 23 });
+    expect(plan).toEqual({ ok: true, startMinute: 960, endMinute: 1020 });
   });
 
   it("accepts an allocation that starts exactly where another ends", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 0,
-      startHour: 13,
-      existing: [{ weekday: 0, startHour: 8, endHour: 13 }],
+      startMinute: 420,
+      existing: [{ weekday: 0, startMinute: 120, endMinute: 420 }],
     });
 
     expect(plan.ok).toBe(true);
@@ -86,7 +86,7 @@ describe("allocation planning", () => {
     const plan = planAllocation({
       commitment: psicologo,
       weekday: 0,
-      startHour: 5,
+      startMinute: -60,
       existing: [],
     });
 

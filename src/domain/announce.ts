@@ -1,4 +1,4 @@
-import { hourLabel } from "./hours";
+import { timeLabel } from "./time";
 
 export const WEEKDAY_NAMES = [
   "segunda",
@@ -12,18 +12,18 @@ export const WEEKDAY_NAMES = [
 
 export type Placement = {
   weekday: number;
-  startHour: number;
-  endHour: number;
+  startMinute: number;
+  endMinute: number;
 };
 
 export const REFUSAL = {
   overlap: "Esse horário já está ocupado.",
   "out-of-day": "O compromisso não cabe nesse horário.",
-  empty: "Um bloco precisa ter pelo menos uma hora.",
+  empty: "Um bloco precisa ter pelo menos meia hora.",
 } as const;
 
 export function describePlacement(placement: Placement): string {
-  return `${WEEKDAY_NAMES[placement.weekday]}, ${hourLabel(placement.startHour)} às ${hourLabel(placement.endHour)}`;
+  return `${WEEKDAY_NAMES[placement.weekday]}, ${timeLabel(placement.startMinute)} às ${timeLabel(placement.endMinute)}`;
 }
 
 export function announceMove(name: string, placement: Placement): string {

@@ -1,25 +1,25 @@
-import { durationOf } from "./hours";
+import { durationOf } from "./time";
 
 export type LoadBlock = {
   commitmentId: number;
   weekday: number;
-  startHour: number;
-  endHour: number;
+  startMinute: number;
+  endMinute: number;
 };
 
 export type Remainder =
-  | { kind: "missing"; hours: number }
+  | { kind: "missing"; minutes: number }
   | { kind: "met" }
-  | { kind: "exceeded"; hours: number };
+  | { kind: "exceeded"; minutes: number };
 
-type Target = { id: number; dailyHours: number | null };
+type Target = { id: number; dailyMinutes: number | null };
 
 export function remainingFor(
   commitment: Target,
   weekday: number,
   blocks: LoadBlock[],
 ): Remainder | null {
-  if (commitment.dailyHours === null) {
+  if (commitment.dailyMinutes === null) {
     return null;
   }
 
@@ -27,13 +27,13 @@ export function remainingFor(
     .filter((block) => block.commitmentId === commitment.id && block.weekday === weekday)
     .reduce((total, block) => total + durationOf(block), 0);
 
-  const difference = commitment.dailyHours - allocated;
+  const difference = commitment.dailyMinutes - allocated;
 
   if (difference > 0) {
-    return { kind: "missing", hours: difference };
+    return { kind: "missing", minutes: difference };
   }
   if (difference < 0) {
-    return { kind: "exceeded", hours: -difference };
+    return { kind: "exceeded", minutes: -difference };
   }
   return { kind: "met" };
 }
