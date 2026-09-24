@@ -89,3 +89,52 @@ test("removes a block by dragging it out of the grid", async ({ page }) => {
   await page.reload();
   await expect(page.getByTestId("block-4-18")).toHaveCount(0);
 });
+
+test("switches focus between the current and the next week", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByTestId("week-focus")).toHaveText("Semana atual");
+
+  await page.getByRole("link", { name: /próxima semana/i }).click();
+
+  await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
+  await expect(page.getByTestId("block-0-8")).toHaveCount(0);
+
+  await page.getByRole("link", { name: /voltar/i }).click();
+  await expect(page.getByTestId("week-focus")).toHaveText("Semana atual");
+});
+
+test("saves the current week as the base routine and applies it to the next one", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-3-9"));
+  await expect(page.getByTestId("block-3-9")).toBeVisible();
+
+  await expect(page.locator(".saving")).toHaveText("");
+
+  await Promise.all([
+    page.waitForResponse(
+      (response) => response.request().method() === "POST" && response.status() === 200,
+    ),
+    page.getByRole("button", { name: /salvar como rotina base/i }).click(),
+  ]);
+
+  await page.goto("/?semana=proxima");
+  const apply = page.getByRole("button", { name: /aplicar rotina base/i });
+  await expect(apply).toBeEnabled();
+  await apply.click();
+
+  await expect(page.getByTestId("block-3-9")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByTestId("block-3-9")).toBeVisible();
+});
+
+test("keeps the two weeks independent", async ({ page }) => {
+  await page.goto("/?semana=proxima");
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-20"));
+  await expect(page.getByTestId("block-5-20")).toBeVisible();
+
+  await page.goto("/");
+  await expect(page.getByTestId("block-5-20")).toHaveCount(0);
+});
