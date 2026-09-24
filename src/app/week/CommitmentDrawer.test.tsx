@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { DndContext } from "@dnd-kit/core";
 import { CommitmentDrawer } from "./CommitmentDrawer";
-
 import type { Commitment } from "../../repository/schema";
 
 const trabalho: Commitment = {
@@ -20,56 +19,59 @@ const psicologo: Commitment = {
   createdAt: "",
 };
 
-const renderDrawer = (
-  commitments = [trabalho],
-  blocks: Parameters<typeof CommitmentDrawer>[0]["blocks"] = [],
-  focusedWeekday = 0,
-) =>
+const renderDrawer = (commitments = [trabalho, psicologo]) =>
   render(
     <DndContext id="test">
-      <CommitmentDrawer
-        commitments={commitments}
-        blocks={blocks}
-        focusedWeekday={focusedWeekday}
-      />
+      <CommitmentDrawer commitments={commitments} />
     </DndContext>,
   );
 
 describe("commitment drawer", () => {
-  it("shows how many hours are still missing on the focused weekday", () => {
-    renderDrawer([trabalho], [{ id: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 13 }]);
+  it("lists every commitment with its name", () => {
+    renderDrawer();
 
-    expect(screen.getByTestId("drawer-commitment-1")).toHaveTextContent("faltam 3h");
+    expect(screen.getByTestId("drawer-commitment-1")).toHaveTextContent("TRABALHO");
+    expect(screen.getByTestId("drawer-commitment-2")).toHaveTextContent("Psicólogo");
   });
 
-  it("reports the daily load as met when it is fully allocated", () => {
-    renderDrawer([trabalho], [{ id: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 16 }]);
+  it("paints each item with the commitment color", () => {
+    renderDrawer();
 
-    expect(screen.getByTestId("drawer-commitment-1")).toHaveTextContent(/completo/i);
+    expect(screen.getByTestId("drawer-commitment-1")).toHaveStyle({
+      backgroundColor: "#d73a4a",
+    });
   });
 
-  it("reports an excess instead of a negative remainder", () => {
-    renderDrawer(
-      [trabalho],
-      [{ id: 1, commitmentId: 1, weekday: 0, startHour: 8, endHour: 20 }],
-    );
+  it("shows no weekday heading", () => {
+    renderDrawer();
 
-    expect(screen.getByTestId("drawer-commitment-1")).toHaveTextContent(/excedeu em 4h/i);
+    for (const day of ["SEGUNDA", "TERÇA", "DOMINGO"]) {
+      expect(screen.queryByText(day)).not.toBeInTheDocument();
+    }
   });
 
-  it("shows no remainder for a commitment without daily hours", () => {
-    renderDrawer([psicologo], []);
+  it("shows no daily remainder", () => {
+    renderDrawer();
 
-    expect(screen.getByTestId("drawer-commitment-2")).not.toHaveTextContent(/faltam/i);
+    expect(screen.queryByText(/faltam/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/dia completo/i)).not.toBeInTheDocument();
   });
 
-  it("counts only the blocks of the focused weekday", () => {
-    renderDrawer(
-      [trabalho],
-      [{ id: 1, commitmentId: 1, weekday: 1, startHour: 8, endHour: 16 }],
-      0,
-    );
+  it("shows the daily load of a commitment that has one", () => {
+    renderDrawer();
 
-    expect(screen.getByTestId("drawer-commitment-1")).toHaveTextContent("faltam 8h");
+    expect(screen.getByTestId("drawer-commitment-1")).toHaveTextContent("8h/dia");
   });
-});
+
+  it("shows no load for a commitment without daily hours", () => {
+    renderDrawer([psicologo]);
+
+    expect(screen.queryByText(/h\/dia/)).not.toBeInTheDocument();
+  });
+
+  it("tells the user when there is no commitment yet", () => {
+    renderDrawer([]);
+
+    expect(screen.getByText(/nenhum compromisso/i)).toBeInTheDocument();
+  });
+})

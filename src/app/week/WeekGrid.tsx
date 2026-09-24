@@ -14,7 +14,6 @@ type Props = {
   onResize?: (block: PlacedBlock, endHour: number) => void;
   onRemove?: (block: PlacedBlock) => void;
   onMove?: (block: PlacedBlock, to: { weekday: number; startHour: number }) => void;
-  onFocusWeekday?: (weekday: number) => void;
 };
 
 function rowOf(hour: number): number {
@@ -179,7 +178,6 @@ export function WeekGrid({
   onResize,
   onRemove,
   onMove,
-  onFocusWeekday,
 }: Props) {
   const { cursor, grab, release, nudge } = useKeyboardCursor();
   const keyboard: KeyboardControls = {
@@ -215,11 +213,7 @@ export function WeekGrid({
       </div>
 
       {WEEKDAY_LABELS.map((label, weekday) => (
-        <div
-          key={label}
-          className="day-column"
-          onPointerEnter={() => onFocusWeekday?.(weekday)}
-        >
+        <div key={label} className="day-column">
           <div className="weekday-head" data-testid={`weekday-head-${weekday}`}>
             {label}
           </div>

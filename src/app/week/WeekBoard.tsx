@@ -8,7 +8,6 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
-import { useState } from "react";
 import type { Commitment } from "../../repository/schema";
 import { withinGrid } from "./collision";
 import { CommitmentDrawer } from "./CommitmentDrawer";
@@ -69,7 +68,6 @@ export function WeekBoard({
     resize,
     remove,
   });
-  const [focusedWeekday, setFocusedWeekday] = useState(0);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   function handleDragEnd(event: DragEndEvent) {
@@ -127,14 +125,9 @@ export function WeekBoard({
           onResize={(block, endHour) => void week.resize(block, endHour)}
           onRemove={(block) => void week.remove(block)}
           onMove={(block, to) => void week.move(block, to)}
-          onFocusWeekday={setFocusedWeekday}
         />
         <div className="side">
-          <CommitmentDrawer
-            commitments={commitments}
-            blocks={week.blocks}
-            focusedWeekday={focusedWeekday}
-          />
+          <CommitmentDrawer commitments={commitments} />
           <WeeklyLoadPanel commitments={commitments} blocks={week.blocks} />
           <RoutineTemplate
             onSave={() => saveTemplate(focus)}

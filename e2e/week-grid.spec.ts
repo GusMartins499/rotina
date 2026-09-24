@@ -96,7 +96,7 @@ test("switches focus between the current and the next week", async ({ page }) =>
   await page.goto("/");
   await expect(page.getByTestId("week-focus")).toHaveText("Semana atual");
 
-  await page.getByRole("link", { name: /próxima semana/i }).click();
+  await page.goto("/?week=next");
 
   await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
   await expect(page.getByTestId("block-0-8")).toHaveCount(0);
@@ -255,4 +255,48 @@ test("keeps the visible labels in portuguese", async ({ page }) => {
   await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
   await expect(page.getByTestId("weekday-head-0")).toHaveText("SEGUNDA");
   await expect(page.getByText(/Semana do dia/)).toBeVisible();
+});
+
+test("renders the closing hour label inside the grid bounds", async ({ page }) => {
+  await page.goto("/");
+
+  const overflow = await page.evaluate(() => {
+    const grid = document.querySelector(".week-grid");
+    const labels = [...document.querySelectorAll(".hour-label")];
+    const last = labels.at(-1);
+    if (grid === null || last === undefined) {
+      return null;
+    }
+    const box = last.getBoundingClientRect();
+    return {
+      text: last.textContent,
+      height: box.height,
+      clipped: box.bottom > grid.getBoundingClientRect().bottom + 0.5,
+    };
+  });
+
+  expect(overflow?.text).toBe("23:00");
+  expect(overflow?.height).toBeGreaterThan(0);
+  expect(overflow?.clipped).toBe(false);
+});
+
+test("configuring the next week is unavailable outside sunday", async ({ page }) => {
+  await page.goto("/");
+
+  const isSunday = new Date().getDay() === 0;
+
+  if (isSunday) {
+    await expect(page.getByRole("link", { name: /próxima semana/i })).toBeVisible();
+  } else {
+    await expect(page.getByTestId("configure-next")).toBeDisabled();
+    await expect(page.getByTestId("configure-hint")).toContainText("domingo");
+  }
+});
+
+test("the drawer shows no weekday and no remainder", async ({ page }) => {
+  await page.goto("/");
+
+  const drawer = page.locator(".drawer");
+  await expect(drawer).not.toContainText("faltam");
+  await expect(drawer).not.toContainText("SEGUNDA");
 });

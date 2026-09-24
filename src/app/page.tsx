@@ -45,7 +45,7 @@ export default async function Page({
       <nav>
         <Link href="/commitments">Gerenciar compromissos</Link>
       </nav>
-      <WeekSwitcher focus={focus} />
+      <WeekSwitcher focus={focus} today={today} />
       <WeekBoard
         weekLabel={weekLabel(week.mondayDate)}
         focus={focus}
