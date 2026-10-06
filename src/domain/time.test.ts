@@ -4,10 +4,21 @@ import {
   isWholeHour,
   minutesOf,
   formatDuration,
+  intervalLabel,
   snapToStep,
   stepsOfDay,
   timeLabel,
 } from "./time";
+
+describe("interval label", () => {
+  it("joins the start and the end of an interval", () => {
+    expect(intervalLabel({ startMinute: 120, endMinute: 420 })).toBe("08:00\u201313:00");
+  });
+
+  it("keeps the half hour visible on both ends", () => {
+    expect(intervalLabel({ startMinute: 150, endMinute: 510 })).toBe("08:30\u201314:30");
+  });
+});
 
 describe("minute conversion", () => {
   it("converts a whole hour to minutes from the day start", () => {

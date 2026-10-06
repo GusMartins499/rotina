@@ -1,12 +1,15 @@
 "use client";
 
-import { formatDuration } from "../../domain/time";
-
 import { useDraggable } from "@dnd-kit/core";
+import { useEffect, useRef } from "react";
+import { formatDuration } from "../../domain/time";
 import type { Commitment } from "../../repository/schema";
 
 type Props = {
   commitments: Commitment[];
+  open: boolean;
+  dragging: boolean;
+  onClose: () => void;
 };
 
 function DraggableCommitment({ commitment }: { commitment: Commitment }) {
@@ -22,18 +25,60 @@ function DraggableCommitment({ commitment }: { commitment: Commitment }) {
         {...attributes}
         data-testid={`drawer-commitment-${commitment.id}`}
         className="drawer-item"
-        style={{ backgroundColor: commitment.color, opacity: isDragging ? 0.4 : 1 }}
+        style={{ backgroundColor: commitment.color, opacity: isDragging ? 0.3 : 1 }}
       >
         <span>{commitment.name}</span>
-        {commitment.dailyMinutes !== null && <small>{formatDuration(commitment.dailyMinutes)}/dia</small>}
+        {commitment.dailyMinutes !== null && (
+          <small>{formatDuration(commitment.dailyMinutes)}/dia</small>
+        )}
       </div>
     </li>
   );
 }
 
-export function CommitmentDrawer({ commitments }: Props) {
+export function CommitmentDrawer({ commitments, open, dragging, onClose }: Props) {
+  const panel = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!open || dragging) {
+      return undefined;
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    function onPointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      const onToggle = target.closest('[aria-controls="commitment-drawer"]') !== null;
+      if (!onToggle && panel.current?.contains(target) === false) {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open, dragging, onClose]);
+
   return (
-    <aside className="drawer">
+    <aside
+      ref={panel}
+      id="commitment-drawer"
+      className="drawer"
+      aria-label="Compromissos"
+      data-open={open ? "true" : "false"}
+      data-dragging={dragging ? "true" : undefined}
+      inert={!open}
+    >
       <h2>Compromissos</h2>
       {commitments.length === 0 ? (
         <p>Nenhum compromisso cadastrado. Cadastre um para poder arrastar para a semana.</p>
@@ -44,6 +89,7 @@ export function CommitmentDrawer({ commitments }: Props) {
           ))}
         </ul>
       )}
+      <p className="drawer-hint">Arraste para a semana. A gaveta se fecha sozinha ao soltar.</p>
     </aside>
   );
 }

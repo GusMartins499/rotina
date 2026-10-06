@@ -21,6 +21,10 @@ export function timeLabel(minutesFromDayStart: number): string {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
+export function intervalLabel(interval: MinuteInterval): string {
+  return `${timeLabel(interval.startMinute)}–${timeLabel(interval.endMinute)}`;
+}
+
 export function snapToStep(minutesFromDayStart: number): number {
   return Math.round(minutesFromDayStart / STEP_MINUTES) * STEP_MINUTES;
 }

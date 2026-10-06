@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { dragOnto } from "./drag";
+import { dragOnto, openCommitments, stepHeight } from "./drag";
 
 test("drags a commitment from the drawer onto the grid and it survives a reload", async ({
   page,
@@ -50,13 +50,14 @@ test("splits TRABALHO into two blocks and clears the daily remainder", async ({ 
 
   const block = page.getByTestId("block-2-120");
   const handle = page.getByTestId("resize-2-120");
+  const step = await stepHeight(page);
   const box = await handle.boundingBox();
   if (box === null) {
     throw new Error("resize handle is not visible");
   }
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2, box.y - 3 * 34, { steps: 10 });
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 - 6 * step, { steps: 10 });
   await page.mouse.up();
 
   await expect(block).toHaveAccessibleName("TRABALHO, quarta, 08:00 às 13:00");
@@ -114,10 +115,12 @@ test("saves the current week as the base routine and applies it to the next one"
 
   await page.waitForTimeout(800);
 
+  await page.getByRole("button", { name: "Configurações" }).click();
   await page.getByRole("button", { name: /salvar como rotina base/i }).click();
   await page.waitForTimeout(800);
 
   await page.goto("/?week=next");
+  await page.getByRole("button", { name: "Configurações" }).click();
   const apply = page.getByRole("button", { name: /aplicar rotina base/i });
   await expect(apply).toBeEnabled();
   await apply.click();
@@ -229,6 +232,7 @@ test("announces the removal when a block is dragged out", async ({ page }) => {
 
 test("resolves an imprecise drop inside the grid to the closest slot", async ({ page }) => {
   await page.goto("/");
+  await openCommitments(page);
   const slot = await page.getByTestId("slot-5-300").boundingBox();
   const source = await page.getByTestId("drawer-commitment-2").boundingBox();
   if (slot === null || source === null) {
@@ -250,22 +254,23 @@ test("serves the commitments screen from an english route", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "Compromissos" })).toBeVisible();
 });
 
-test("opens commitments in a drawer from the gear button", async ({ page }) => {
+test("opens the settings in a drawer from the gear button", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.getByRole("button", { name: "Compromissos" }).click();
+  await page.getByRole("button", { name: "Configurações" }).click();
 
   const drawer = page.getByRole("dialog");
   await expect(drawer).toBeVisible();
   await expect(drawer).toContainText("TRABALHO");
+  await expect(drawer).toContainText("Rotina base");
   await expect(page.getByTestId("weekday-head-0")).toBeVisible();
 });
 
 test("closes the settings drawer with Escape and returns focus", async ({ page }) => {
   await page.goto("/");
 
-  const gear = page.getByRole("button", { name: "Compromissos" });
+  const gear = page.getByRole("button", { name: "Configurações" });
   await gear.click();
   await expect(page.getByRole("dialog")).toBeVisible();
 
@@ -277,13 +282,15 @@ test("closes the settings drawer with Escape and returns focus", async ({ page }
 
 test("lists a new commitment in the drag drawer without a reload", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Compromissos" }).click();
+  await page.getByRole("button", { name: "Configurações" }).click();
 
   await page.getByLabel(/nome/i).fill("Academia");
   await page.getByRole("button", { name: /salvar compromisso/i }).click();
 
   await expect(page.getByRole("dialog")).toContainText("Academia");
   await page.keyboard.press("Escape");
+
+  await openCommitments(page);
   await expect(page.locator(".drawer")).toContainText("Academia");
 });
 
@@ -333,6 +340,7 @@ test("configuring the next week is unavailable outside sunday", async ({ page })
 
 test("the drawer shows no weekday and no remainder", async ({ page }) => {
   await page.goto("/");
+  await openCommitments(page);
 
   const drawer = page.locator(".drawer");
   await expect(drawer).not.toContainText("faltam");
@@ -353,6 +361,7 @@ test("previews the candidate size while the edge is dragged", async ({ page }) =
   await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-5-0"));
   await page.waitForTimeout(800);
 
+  const step = await stepHeight(page);
   const handle = await page.getByTestId("resize-5-0").boundingBox();
   if (handle === null) {
     throw new Error("resize handle is not visible");
@@ -360,7 +369,9 @@ test("previews the candidate size while the edge is dragged", async ({ page }) =
 
   await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
   await page.mouse.down();
-  await page.mouse.move(handle.x + handle.width / 2, handle.y + 2 * 36, { steps: 8 });
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2 + 4 * step, {
+    steps: 8,
+  });
 
   await expect(page.getByTestId("resize-preview")).toBeVisible();
   await expect(page.getByTestId("resize-preview")).toContainText("06:00 às 08:30");
@@ -383,4 +394,50 @@ test("marks no column while the next week is in focus", async ({ page }) => {
 
   await expect(page.locator(`.day-column[data-today="true"]`)).toHaveCount(0);
   await expect(page.getByTestId("now-line")).toHaveCount(0);
+});
+
+test("closes the commitment drawer by itself once a block is dropped", async ({ page }) => {
+  await page.goto("/");
+
+  const toggle = page.getByTestId("commitments-toggle");
+  await openCommitments(page);
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+  await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-0"));
+
+  await expect(page.getByTestId("block-6-0")).toBeVisible();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+});
+
+test("writes the hours of a block next to its name", async ({ page }) => {
+  await page.goto("/");
+
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-1-150"));
+
+  const block = page.getByTestId("block-1-150");
+  await expect(block).toContainText("TRABALHO");
+  await expect(block).toContainText("08:30\u201316:30");
+});
+
+test("shows the weekly load in a popover instead of a panel", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByTestId("weekly-load-1")).toHaveCount(0);
+
+  await page.getByTestId("weekly-load-toggle").click();
+  await expect(page.getByTestId("weekly-load-1")).toBeVisible();
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("weekly-load-1")).toHaveCount(0);
+});
+
+test("fits the week in the viewport without scrolling the page", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+  );
+
+  expect(overflow).toBeLessThanOrEqual(0);
 });

@@ -9,10 +9,11 @@ import {
 } from "react";
 import {
   MINUTES_PER_DAY,
-  MINUTES_PER_HOUR,
   STEP_MINUTES,
   WEEKDAY_LABELS,
   timeLabel,
+  intervalLabel,
+  durationOf,
   isWholeHour,
   stepsOfDay,
 } from "../../domain/time";
@@ -97,13 +98,12 @@ function Block({
     event.stopPropagation();
 
     const node = element.current;
-    if (node === null || onResize === undefined) {
+    const slot = node?.parentElement?.querySelector(".slot") ?? null;
+    if (node === null || slot === null || onResize === undefined) {
       return;
     }
 
-    const stepHeight =
-      (node.getBoundingClientRect().height / (block.endMinute - block.startMinute)) *
-      STEP_MINUTES;
+    const stepHeight = slot.getBoundingClientRect().height;
     const originY = event.clientY;
     let candidate = block.endMinute;
 
@@ -214,6 +214,7 @@ function Block({
       {...attributes}
       data-testid={`block-${block.weekday}-${block.startMinute}`}
       data-grabbed={grabbed ? "true" : undefined}
+      data-compact={durationOf(block) <= STEP_MINUTES ? "true" : undefined}
       aria-grabbed={grabbed}
       className="block"
       aria-label={`${commitment?.name ?? "Compromisso"}, ${WEEKDAY_NAMES[block.weekday]}, ${timeLabel(block.startMinute)} às ${timeLabel(block.endMinute)}`}
@@ -223,7 +224,8 @@ function Block({
         opacity: isDragging ? 0.4 : 1,
       }}
     >
-      <span>{commitment?.name}</span>
+      <span className="block-name">{commitment?.name}</span>
+      <span className="block-time">{intervalLabel(block)}</span>
       <span
         data-testid={`resize-${block.weekday}-${block.startMinute}`}
         className="resize-handle"
@@ -281,7 +283,7 @@ export function WeekGrid({
               data-testid={isWholeHour(minute) ? `hour-label-${minute}` : undefined}
               className={isWholeHour(minute) ? "hour-label" : "hour-label hour-label-half"}
             >
-              {isWholeHour(minute) ? timeLabel(minute) : ""}
+              {timeLabel(minute)}
             </span>
           ))}
           <span className="hour-label hour-label-end">{timeLabel(MINUTES_PER_DAY)}</span>

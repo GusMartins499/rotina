@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Commitment } from "../../repository/schema";
 import { CommitmentList } from "./CommitmentList";
 import { DeleteCommitment } from "./DeleteCommitment";
@@ -11,6 +11,7 @@ import type { CommitmentInput } from "../../domain/commitment";
 type Props = {
   commitments: Commitment[];
   allocatedBlocks: Record<number, number>;
+  children?: ReactNode;
 };
 
 function GearIcon() {
@@ -26,7 +27,7 @@ function GearIcon() {
   );
 }
 
-export function SettingsDrawer({ commitments, allocatedBlocks }: Props) {
+export function SettingsDrawer({ commitments, allocatedBlocks, children }: Props) {
   const [open, setOpen] = useState(false);
   const gear = useRef<HTMLButtonElement | null>(null);
   const closeButton = useRef<HTMLButtonElement | null>(null);
@@ -66,8 +67,8 @@ export function SettingsDrawer({ commitments, allocatedBlocks }: Props) {
       <button
         ref={gear}
         type="button"
-        className="gear"
-        aria-label="Compromissos"
+        className="chip chip-icon"
+        aria-label="Configurações"
         aria-expanded={open}
         onClick={() => setOpen(true)}
       >
@@ -80,15 +81,17 @@ export function SettingsDrawer({ commitments, allocatedBlocks }: Props) {
           <section
             role="dialog"
             aria-modal="true"
-            aria-label="Compromissos"
+            aria-label="Configurações"
             className="settings-drawer"
           >
             <header>
-              <h2>Compromissos</h2>
+              <h2>Configurações</h2>
               <button ref={closeButton} type="button" onClick={close} aria-label="Fechar">
                 ×
               </button>
             </header>
+
+            <h3>Compromissos</h3>
 
             <NewCommitment />
 
@@ -112,6 +115,8 @@ export function SettingsDrawer({ commitments, allocatedBlocks }: Props) {
                 </>
               )}
             />
+
+            {children !== undefined && <div className="settings-section">{children}</div>}
           </section>
         </>
       )}

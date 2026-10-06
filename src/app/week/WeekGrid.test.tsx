@@ -67,6 +67,27 @@ describe("week grid", () => {
     );
   });
 
+  it("concatenates the commitment name with the hours it covers", () => {
+    renderGrid([{ id: 1, commitmentId: 1, weekday: 0, startMinute: 120, endMinute: 420 }]);
+
+    const block = screen.getByTestId("block-0-120");
+
+    expect(within(block).getByText("TRABALHO")).toBeInTheDocument();
+    expect(within(block).getByText("08:00\u201313:00")).toBeInTheDocument();
+  });
+
+  it("lays a half hour block out in a single line", () => {
+    renderGrid([{ id: 2, commitmentId: 2, weekday: 1, startMinute: 60, endMinute: 90 }]);
+
+    expect(screen.getByTestId("block-1-60")).toHaveAttribute("data-compact", "true");
+  });
+
+  it("labels the half hours so a start at 14:30 is readable", () => {
+    renderGrid();
+
+    expect(screen.getByText("14:30")).toBeInTheDocument();
+  });
+
   it("offers a drop target for every weekday and half hour", () => {
     renderGrid();
 
