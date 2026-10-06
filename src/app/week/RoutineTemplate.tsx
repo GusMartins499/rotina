@@ -33,7 +33,7 @@ export function RoutineTemplate({ onSave, onApply, canApply }: Props) {
 
   return (
     <section className="routine-template">
-      <h2>Rotina base</h2>
+      <h3>Rotina base</h3>
       <button type="button" onClick={() => void run(onSave, false)}>
         Salvar como rotina base
       </button>

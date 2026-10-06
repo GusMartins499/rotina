@@ -50,7 +50,7 @@ describe("resize preview", () => {
 
   it("shows the candidate size while the edge is dragged", () => {
     renderGrid();
-    stubHeight("block-0-120", 5 * 34);
+    stubHeight("slot-0-0", 17);
 
     fireEvent.pointerDown(screen.getByTestId("resize-0-120"), { clientY: 170 });
     fireEvent.pointerMove(window, { clientY: 170 + 2 * 34 });
@@ -60,7 +60,7 @@ describe("resize preview", () => {
 
   it("labels the preview with the candidate hours", () => {
     renderGrid();
-    stubHeight("block-0-120", 5 * 34);
+    stubHeight("slot-0-0", 17);
 
     fireEvent.pointerDown(screen.getByTestId("resize-0-120"), { clientY: 170 });
     fireEvent.pointerMove(window, { clientY: 170 + 2 * 34 });
@@ -70,7 +70,7 @@ describe("resize preview", () => {
 
   it("marks the preview as refused when it would overlap", () => {
     renderGrid();
-    stubHeight("block-0-120", 5 * 34);
+    stubHeight("slot-0-0", 17);
 
     fireEvent.pointerDown(screen.getByTestId("resize-0-120"), { clientY: 170 });
     fireEvent.pointerMove(window, { clientY: 170 + 3 * 34 });
@@ -80,7 +80,7 @@ describe("resize preview", () => {
 
   it("clears the preview when the pointer is released", () => {
     renderGrid();
-    stubHeight("block-0-120", 5 * 34);
+    stubHeight("slot-0-0", 17);
 
     fireEvent.pointerDown(screen.getByTestId("resize-0-120"), { clientY: 170 });
     fireEvent.pointerMove(window, { clientY: 170 + 2 * 34 });
@@ -96,7 +96,7 @@ describe("resize preview", () => {
         <WeekGrid blocks={blocks} commitments={[trabalho]} onResize={onResize} />
       </DndContext>,
     );
-    stubHeight("block-0-120", 5 * 34);
+    stubHeight("slot-0-0", 17);
 
     fireEvent.pointerDown(screen.getByTestId("resize-0-120"), { clientY: 170 });
     fireEvent.pointerMove(window, { clientY: 170 + 2 * 34 });

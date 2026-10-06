@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { DndContext } from "@dnd-kit/core";
 import { CommitmentDrawer } from "./CommitmentDrawer";
 import type { Commitment } from "../../repository/schema";
@@ -19,10 +20,19 @@ const psicologo: Commitment = {
   createdAt: "",
 };
 
-const renderDrawer = (commitments = [trabalho, psicologo]) =>
+const renderDrawer = (
+  commitments = [trabalho, psicologo],
+  props: Partial<Parameters<typeof CommitmentDrawer>[0]> = {},
+) =>
   render(
     <DndContext id="test">
-      <CommitmentDrawer commitments={commitments} />
+      <CommitmentDrawer
+        commitments={commitments}
+        open
+        dragging={false}
+        onClose={vi.fn()}
+        {...props}
+      />
     </DndContext>,
   );
 
@@ -73,5 +83,39 @@ describe("commitment drawer", () => {
     renderDrawer([]);
 
     expect(screen.getByText(/nenhum compromisso/i)).toBeInTheDocument();
+  });
+
+  it("stays out of the way while it is closed", () => {
+    renderDrawer([trabalho], { open: false });
+
+    expect(screen.getByLabelText("Compromissos")).toHaveAttribute("data-open", "false");
+  });
+
+  it("closes itself with Escape", async () => {
+    const onClose = vi.fn();
+    renderDrawer([trabalho], { onClose });
+
+    await userEvent.keyboard("{Escape}");
+
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("closes itself when the pointer goes down outside it", async () => {
+    const onClose = vi.fn();
+    renderDrawer([trabalho], { onClose });
+
+    await userEvent.click(document.body);
+
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("keeps itself alive while a commitment is being dragged out of it", async () => {
+    const onClose = vi.fn();
+    renderDrawer([trabalho], { onClose, dragging: true });
+
+    await userEvent.keyboard("{Escape}");
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Compromissos")).toHaveAttribute("data-dragging", "true");
   });
 })
