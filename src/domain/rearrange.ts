@@ -34,20 +34,23 @@ function settle(
     : { ok: true, ...candidate };
 }
 
+export function moveSpan(
+  block: PlacedInterval,
+  target: { weekday: number; startMinute: number },
+): { weekday: number; startMinute: number; endMinute: number } {
+  return {
+    weekday: target.weekday,
+    startMinute: target.startMinute,
+    endMinute: target.startMinute + durationOf(block),
+  };
+}
+
 export function planMove(
   block: PlacedInterval,
   target: { weekday: number; startMinute: number },
   existing: PlacedInterval[],
 ): RearrangePlan {
-  return settle(
-    {
-      weekday: target.weekday,
-      startMinute: target.startMinute,
-      endMinute: target.startMinute + durationOf(block),
-    },
-    block,
-    existing,
-  );
+  return settle(moveSpan(block, target), block, existing);
 }
 
 export function planResize(

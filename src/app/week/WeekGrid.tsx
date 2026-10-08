@@ -23,6 +23,7 @@ import { nowMarker } from "../../domain/now";
 import type { Commitment } from "../../repository/schema";
 import type { PlacedBlock } from "./useAllocation";
 import { useKeyboardCursor, type Cursor } from "./useKeyboardCursor";
+import type { Preview } from "./placementPreview";
 
 type Props = {
   blocks: PlacedBlock[];
@@ -32,13 +33,7 @@ type Props = {
   onMove?: (block: PlacedBlock, to: { weekday: number; startMinute: number }) => void;
   now?: string | null;
   focusedMonday?: string;
-};
-
-type Preview = {
-  weekday: number;
-  startMinute: number;
-  endMinute: number;
-  refused: boolean;
+  dropPreview?: Preview | null;
 };
 
 function rowOf(minute: number): number {
@@ -250,9 +245,11 @@ export function WeekGrid({
   onMove,
   now = null,
   focusedMonday = "",
+  dropPreview = null,
 }: Props) {
   const { cursor, grab, release, nudge } = useKeyboardCursor();
-  const [preview, setPreview] = useState<Preview | null>(null);
+  const [resizePreview, setResizePreview] = useState<Preview | null>(null);
+  const preview = resizePreview ?? dropPreview;
   const keyboard: KeyboardControls = {
     cursor,
     release,
@@ -312,15 +309,16 @@ export function WeekGrid({
             ))}
             {preview !== null && preview.weekday === weekday && (
               <div
-                data-testid="resize-preview"
+                data-testid={resizePreview === null ? "drop-preview" : "resize-preview"}
                 data-refused={preview.refused ? "true" : "false"}
-                className="resize-preview"
+                className="placement-preview"
                 style={{
-                  gridRow: `${rowOf(preview.startMinute)} / ${rowOf(Math.max(preview.endMinute, preview.startMinute + STEP_MINUTES))}`,
+                  gridRow: `${rowOf(preview.startMinute)} / ${rowOf(Math.min(Math.max(preview.endMinute, preview.startMinute + STEP_MINUTES), MINUTES_PER_DAY))}`,
                 }}
               >
                 <span>
-                  {timeLabel(preview.startMinute)} às {timeLabel(preview.endMinute)}
+                  {timeLabel(preview.startMinute)} às{" "}
+                  {timeLabel(Math.min(preview.endMinute, MINUTES_PER_DAY))}
                 </span>
               </div>
             )}
@@ -335,7 +333,7 @@ export function WeekGrid({
                   onResize={onResize}
                   onRemove={onRemove}
                   keyboard={keyboard}
-                  onPreview={setPreview}
+                  onPreview={setResizePreview}
                   siblings={blocks}
                 />
               ))}

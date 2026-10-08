@@ -391,7 +391,7 @@ button[disabled] {
   opacity: 1;
 }
 
-.resize-preview {
+.placement-preview {
   grid-column: 1;
   margin: 2px 3px;
   border-radius: var(--radius);
@@ -406,7 +406,7 @@ button[disabled] {
   pointer-events: none;
 }
 
-.resize-preview[data-refused="true"] {
+.placement-preview[data-refused="true"] {
   border-color: var(--danger);
   background: #fdeeee;
   color: var(--danger);

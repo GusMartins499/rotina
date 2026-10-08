@@ -12,12 +12,15 @@ export type AllocationPlan =
   | { ok: true; startMinute: number; endMinute: number }
   | { ok: false; reason: "overlap" | "out-of-day" };
 
+export function allocationSpan(
+  commitment: { dailyMinutes: number | null },
+  startMinute: number,
+): MinuteInterval {
+  return { startMinute, endMinute: startMinute + (commitment.dailyMinutes ?? STEP_MINUTES) };
+}
+
 export function planAllocation(target: AllocationTarget): AllocationPlan {
-  const duration = target.commitment.dailyMinutes ?? STEP_MINUTES;
-  const interval = {
-    startMinute: target.startMinute,
-    endMinute: target.startMinute + duration,
-  };
+  const interval = allocationSpan(target.commitment, target.startMinute);
 
   if (interval.startMinute < 0 || interval.endMinute > MINUTES_PER_DAY) {
     return { ok: false, reason: "out-of-day" };

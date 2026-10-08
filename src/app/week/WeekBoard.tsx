@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { useCallback, useState } from "react";
@@ -22,6 +23,7 @@ import { WeekGrid } from "./WeekGrid";
 import { WeeklyLoadButton } from "./WeeklyLoadButton";
 import { WeekSwitcher } from "./WeekSwitcher";
 import { RoutineTemplate } from "./RoutineTemplate";
+import { dropPreviewOf, type Dragged, type SlotTarget } from "./placementPreview";
 import {
   useAllocation,
   type AllocateResult,
@@ -49,11 +51,7 @@ type Props = {
   remove: (id: number) => Promise<WriteResult>;
 };
 
-type Dragged =
-  | { kind: "commitment"; commitment: Commitment | undefined }
-  | { kind: "block"; block: PlacedBlock; commitment: Commitment | undefined };
-
-function parseSlot(id: string): { weekday: number; startMinute: number } | null {
+function parseSlot(id: string): SlotTarget | null {
   const match = /^slot-(\d+)-(\d+)$/.exec(id);
   return match === null ? null : { weekday: Number(match[1]), startMinute: Number(match[2]) };
 }
@@ -124,6 +122,10 @@ export function WeekBoard({
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dragged, setDragged] = useState<Dragged | null>(null);
+  const [overSlot, setOverSlot] = useState<string | null>(null);
+  const dropSlot = overSlot === null ? null : parseSlot(overSlot);
+  const dropPreview =
+    dragged === null || dropSlot === null ? null : dropPreviewOf(dragged, dropSlot, week.blocks);
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
@@ -141,9 +143,18 @@ export function WeekBoard({
     }
   }
 
+  function handleDragOver(event: DragOverEvent) {
+    setOverSlot(event.over === null ? null : String(event.over.id));
+  }
+
+  function endDrag() {
+    setDragged(null);
+    setOverSlot(null);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const dragging = dragged;
-    setDragged(null);
+    endDrag();
 
     if (dragging?.kind === "commitment") {
       setDrawerOpen(false);
@@ -175,8 +186,9 @@ export function WeekBoard({
       autoScroll={false}
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      onDragCancel={() => setDragged(null)}
+      onDragCancel={endDrag}
     >
       <div className="app">
         <header className="app-bar">
@@ -227,6 +239,7 @@ export function WeekBoard({
             onMove={(block, to) => void week.move(block, to)}
             now={now}
             focusedMonday={focusedMonday}
+            dropPreview={dropPreview}
           />
         </main>
       </div>
