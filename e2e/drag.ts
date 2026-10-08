@@ -39,3 +39,16 @@ export async function dragOnto(page: Page, source: Locator, target: Locator) {
   await page.mouse.up();
   await page.waitForTimeout(DRAWER_TRANSITION_MS);
 }
+
+export async function dragOut(page: Page, source: Locator) {
+  const from = await source.boundingBox();
+
+  if (from === null) {
+    throw new Error("source is not visible");
+  }
+
+  await page.mouse.move(from.x + from.width / 2, from.y + 4);
+  await page.mouse.down();
+  await page.mouse.move(10, 10, { steps: 12 });
+  await page.mouse.up();
+}

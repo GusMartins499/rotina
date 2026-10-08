@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { dragOnto, openCommitments, stepHeight } from "./drag";
+import { dragOnto, dragOut, openCommitments, stepHeight } from "./drag";
 
 test("drags a commitment from the drawer onto the grid and it survives a reload", async ({
   page,
@@ -104,6 +104,38 @@ test("switches focus between the current and the next week", async ({ page }) =>
 
   await page.getByRole("link", { name: /voltar/i }).click();
   await expect(page.getByTestId("week-focus")).toHaveText("Semana atual");
+});
+
+test("updates the daily remainder after each drop and never refuses one past the goal", async ({
+  page,
+}) => {
+  await page.goto("/?week=next");
+  await openCommitments(page);
+
+  const remainder = page.getByTestId("remainder-1");
+  await expect(page.getByTestId("drawer-focused-day")).toHaveText("Segunda");
+  await expect(remainder).toHaveText("faltam 8h");
+
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-0-0"));
+  await expect(page.getByTestId("block-0-0")).toBeVisible();
+  await openCommitments(page);
+  await expect(remainder).toHaveText("dia completo");
+
+  await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-0-540"));
+  await expect(page.getByTestId("block-0-540")).toBeVisible();
+  await expect(page.getByTestId("board-error")).toHaveCount(0);
+  await openCommitments(page);
+  await expect(remainder).toHaveText("8h a mais");
+  await expect(page.locator(".drawer [role=alert]")).toHaveCount(0);
+
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(800);
+  await dragOut(page, page.getByTestId("block-0-540"));
+  await expect(page.getByTestId("block-0-540")).toHaveCount(0);
+  await page.waitForTimeout(800);
+  await dragOut(page, page.getByTestId("block-0-0"));
+  await expect(page.locator('[data-testid^="block-"]')).toHaveCount(0);
+  await page.waitForTimeout(800);
 });
 
 test("saves the current week as the base routine and applies it to the next one", async ({
@@ -338,13 +370,15 @@ test("configuring the next week is unavailable outside sunday", async ({ page })
   }
 });
 
-test("the drawer shows no weekday and no remainder", async ({ page }) => {
+test("the drawer labels today and shows its daily remainder", async ({ page }) => {
   await page.goto("/");
   await openCommitments(page);
 
-  const drawer = page.locator(".drawer");
-  await expect(drawer).not.toContainText("faltam");
-  await expect(drawer).not.toContainText("SEGUNDA");
+  const weekdays = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"];
+  const today = weekdays[(new Date().getDay() + 6) % 7];
+  await expect(page.getByTestId("drawer-focused-day")).toHaveText(`Hoje, ${today}`);
+  await expect(page.getByTestId("remainder-1")).toHaveText(/^(faltam .+|dia completo|.+ a mais)$/);
+  await expect(page.getByTestId("remainder-2")).toHaveCount(0);
 });
 
 test("shows a toast while a change is saved", async ({ page }) => {

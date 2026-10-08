@@ -12,6 +12,7 @@ import {
 } from "@dnd-kit/core";
 import { useCallback, useState } from "react";
 import { formatDuration, intervalLabel } from "../../domain/time";
+import { focusedDayOf } from "../../domain/week";
 import type { Commitment } from "../../repository/schema";
 import { SettingsDrawer } from "../commitments/SettingsDrawer";
 import { withinGrid } from "./collision";
@@ -233,6 +234,8 @@ export function WeekBoard({
 
       <CommitmentDrawer
         commitments={commitments}
+        blocks={week.blocks}
+        focusedDay={focusedDayOf(now ?? today, focusedMonday)}
         open={drawerOpen}
         dragging={dragged?.kind === "commitment"}
         onClose={closeDrawer}

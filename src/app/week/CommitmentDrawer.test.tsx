@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DndContext } from "@dnd-kit/core";
 import { CommitmentDrawer } from "./CommitmentDrawer";
+import type { LoadBlock } from "../../domain/load";
 import type { Commitment } from "../../repository/schema";
 
 const trabalho: Commitment = {
@@ -28,6 +29,8 @@ const renderDrawer = (
     <DndContext id="test">
       <CommitmentDrawer
         commitments={commitments}
+        blocks={[]}
+        focusedDay={null}
         open
         dragging={false}
         onClose={vi.fn()}
@@ -60,7 +63,7 @@ describe("commitment drawer", () => {
     }
   });
 
-  it("shows no daily remainder", () => {
+  it("shows no daily remainder while no day is in focus", () => {
     renderDrawer();
 
     expect(screen.queryByText(/faltam/i)).not.toBeInTheDocument();
@@ -119,3 +122,92 @@ describe("commitment drawer", () => {
     expect(screen.getByLabelText("Compromissos")).toHaveAttribute("data-dragging", "true");
   });
 })
+
+
+const monday = { weekday: 0, isToday: false };
+const trabalhoOn = (weekday: number, startMinute: number, endMinute: number): LoadBlock => ({
+  commitmentId: 1,
+  weekday,
+  startMinute,
+  endMinute,
+});
+
+const renderFocused = (blocks: LoadBlock[], focusedDay = monday) =>
+  renderDrawer([trabalho, psicologo], { blocks, focusedDay });
+
+describe("daily remainder", () => {
+  it("shows what is missing for the focused day", () => {
+    renderFocused([trabalhoOn(0, 120, 420)]);
+
+    expect(screen.getByTestId("remainder-1")).toHaveTextContent("faltam 3h");
+  });
+
+  it("shows the goal as met when the day is complete", () => {
+    renderFocused([trabalhoOn(0, 120, 600)]);
+
+    expect(screen.getByTestId("remainder-1")).toHaveTextContent("dia completo");
+    expect(screen.queryByText(/faltam/)).not.toBeInTheDocument();
+  });
+
+  it("shows the excess when the day goes over the goal", () => {
+    renderFocused([trabalhoOn(0, 120, 660)]);
+
+    expect(screen.getByTestId("remainder-1")).toHaveTextContent("1h a mais");
+  });
+
+  it("reports the excess without alerting", () => {
+    renderFocused([trabalhoOn(0, 120, 660)]);
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows nothing for a commitment without daily load", () => {
+    renderFocused([{ commitmentId: 2, weekday: 0, startMinute: 720, endMinute: 780 }]);
+
+    expect(screen.queryByTestId("remainder-2")).not.toBeInTheDocument();
+  });
+
+  it("counts only blocks of the focused day", () => {
+    renderFocused([trabalhoOn(0, 120, 600)], { weekday: 1, isToday: true });
+
+    expect(screen.getByTestId("remainder-1")).toHaveTextContent("faltam 8h");
+  });
+
+  it("keeps the daily goal visible next to the remainder", () => {
+    renderFocused([trabalhoOn(0, 120, 420)]);
+
+    expect(screen.getByTestId("drawer-commitment-1")).toHaveTextContent("8h/dia");
+  });
+
+  it("updates the remainder as soon as the blocks change", () => {
+    const { rerender } = renderFocused([]);
+    expect(screen.getByTestId("remainder-1")).toHaveTextContent("faltam 8h");
+
+    rerender(
+      <DndContext id="test">
+        <CommitmentDrawer
+          commitments={[trabalho, psicologo]}
+          blocks={[trabalhoOn(0, 120, 360)]}
+          focusedDay={monday}
+          open
+          dragging={false}
+          onClose={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    expect(screen.getByTestId("remainder-1")).toHaveTextContent("faltam 4h");
+  });
+
+  it("labels today as the focused day", () => {
+    renderFocused([], { weekday: 2, isToday: true });
+
+    expect(screen.getByTestId("drawer-focused-day")).toHaveTextContent("Hoje, quarta");
+  });
+
+  it("labels monday when the next week is in focus", () => {
+    renderFocused([]);
+
+    expect(screen.getByTestId("drawer-focused-day")).toHaveTextContent("Segunda");
+  });
+});
