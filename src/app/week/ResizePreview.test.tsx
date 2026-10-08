@@ -106,3 +106,55 @@ describe("resize preview", () => {
     expect(onResize).not.toHaveBeenCalled();
   });
 })
+
+describe("drop preview on the grid", () => {
+  const renderWithDrop = (dropPreview: Parameters<typeof WeekGrid>[0]["dropPreview"]) =>
+    render(
+      <DndContext id="test">
+        <WeekGrid
+          blocks={blocks}
+          commitments={[trabalho]}
+          onResize={vi.fn()}
+          dropPreview={dropPreview}
+        />
+      </DndContext>,
+    );
+
+  it("renders the candidate span handed by the board", () => {
+    renderWithDrop({ weekday: 3, startMinute: 540, endMinute: 780, refused: false });
+
+    expect(screen.getByTestId("drop-preview")).toHaveTextContent("15:00 às 19:00");
+    expect(screen.getByTestId("drop-preview")).toHaveStyle({ gridRow: "19 / 27" });
+    expect(screen.getByTestId("drop-preview")).toHaveAttribute("data-refused", "false");
+  });
+
+  it("carries the refused state", () => {
+    renderWithDrop({ weekday: 0, startMinute: 0, endMinute: 480, refused: true });
+
+    expect(screen.getByTestId("drop-preview")).toHaveAttribute("data-refused", "true");
+  });
+
+  it("keeps a span that overflows the day inside the grid", () => {
+    renderWithDrop({ weekday: 0, startMinute: 960, endMinute: 1440, refused: true });
+
+    expect(screen.getByTestId("drop-preview")).toHaveStyle({ gridRow: "33 / 35" });
+    expect(screen.getByTestId("drop-preview")).toHaveTextContent("22:00 às 23:00");
+  });
+
+  it("gives way to an active resize", () => {
+    renderWithDrop({ weekday: 3, startMinute: 540, endMinute: 780, refused: false });
+    stubHeight("slot-0-0", 17);
+
+    fireEvent.pointerDown(screen.getByTestId("resize-0-120"), { clientY: 170 });
+    fireEvent.pointerMove(window, { clientY: 170 + 2 * 34 });
+
+    expect(screen.getByTestId("resize-preview")).toBeInTheDocument();
+    expect(screen.queryByTestId("drop-preview")).not.toBeInTheDocument();
+  });
+
+  it("renders nothing without a candidate", () => {
+    renderWithDrop(null);
+
+    expect(screen.queryByTestId("drop-preview")).not.toBeInTheDocument();
+  });
+});

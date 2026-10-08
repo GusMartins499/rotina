@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { dragOnto, dragOut, openCommitments, stepHeight } from "./drag";
 
 test("drags a commitment from the drawer onto the grid and it survives a reload", async ({
@@ -474,4 +474,61 @@ test("fits the week in the viewport without scrolling the page", async ({ page }
   );
 
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+async function hover(page: Page, source: Locator, target: Locator) {
+  await openCommitments(page);
+  const from = await source.boundingBox();
+  const to = await target.boundingBox();
+  if (from === null || to === null) {
+    throw new Error("source or target is not visible");
+  }
+
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
+}
+
+test.describe("drop preview", () => {
+  test("previews the whole span of a commitment dragged from the drawer", async ({ page }) => {
+    await page.goto("/?week=next");
+
+    await hover(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-6-0"));
+
+    await expect(page.getByTestId("drop-preview")).toContainText("06:00 às 14:00");
+    await expect(page.getByTestId("drop-preview")).toHaveAttribute("data-refused", "false");
+    await page.mouse.up();
+  });
+
+  test("clears the preview when the pointer leaves the grid", async ({ page }) => {
+    await page.goto("/?week=next");
+
+    await hover(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-600"));
+    await expect(page.getByTestId("drop-preview")).toBeVisible();
+
+    await page.mouse.move(5, 5, { steps: 6 });
+    await expect(page.getByTestId("drop-preview")).toHaveCount(0);
+    await page.mouse.up();
+  });
+
+  test("clears the preview when the drag is cancelled with Escape", async ({ page }) => {
+    await page.goto("/?week=next");
+
+    await hover(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-600"));
+    await expect(page.getByTestId("drop-preview")).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("drop-preview")).toHaveCount(0);
+    await page.mouse.up();
+    await expect(page.getByTestId("block-6-600")).toHaveCount(0);
+  });
+
+  test("clears the preview after the drop", async ({ page }) => {
+    await page.goto("/?week=next");
+
+    await dragOnto(page, page.getByTestId("drawer-commitment-2"), page.getByTestId("slot-6-660"));
+
+    await expect(page.getByTestId("block-6-660")).toBeVisible();
+    await expect(page.getByTestId("drop-preview")).toHaveCount(0);
+  });
 });
