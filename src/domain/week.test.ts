@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mondayOf, weekdayIndexOf } from "./week";
+import { focusedDayOf, mondayOf, weekdayIndexOf } from "./week";
 
 describe("monday of a week", () => {
   it("returns the same date when it is already a monday", () => {
@@ -30,5 +30,22 @@ describe("weekday index", () => {
 
   it("maps sunday to six", () => {
     expect(weekdayIndexOf("2026-09-27")).toBe(6);
+  });
+});
+
+describe("focused day", () => {
+  it("focuses today while the current week is in focus", () => {
+    expect(focusedDayOf("2026-09-23T10:15", "2026-09-21")).toEqual({
+      weekday: 2,
+      isToday: true,
+    });
+  });
+
+  it("focuses monday while the next week is in focus", () => {
+    expect(focusedDayOf("2026-09-23", "2026-09-28")).toEqual({ weekday: 0, isToday: false });
+  });
+
+  it("keeps sunday inside the week it closes", () => {
+    expect(focusedDayOf("2026-09-27", "2026-09-21")).toEqual({ weekday: 6, isToday: true });
   });
 });

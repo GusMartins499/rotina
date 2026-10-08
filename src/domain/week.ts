@@ -15,3 +15,14 @@ export function nextMonday(mondayDate: string): string {
   const monday = new Date(`${mondayDate}T00:00:00Z`);
   return new Date(monday.getTime() + 7 * MILLISECONDS_PER_DAY).toISOString().slice(0, 10);
 }
+
+export type FocusedDay = { weekday: number; isToday: boolean };
+
+export function focusedDayOf(todayIso: string, focusedMonday: string): FocusedDay {
+  const date = todayIso.slice(0, 10);
+
+  if (mondayOf(date) === focusedMonday) {
+    return { weekday: weekdayIndexOf(date), isToday: true };
+  }
+  return { weekday: 0, isToday: false };
+}
