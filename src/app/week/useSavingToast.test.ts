@@ -57,12 +57,4 @@ describe("saving toast", () => {
 
     expect(result.current).toEqual({ state: "failed", message: "banco fora" });
   });
-
-  it("keeps a failure on screen without expiring it", () => {
-    const { result } = renderHook(() => useSavingToast(false, "banco fora"));
-
-    act(() => void vi.advanceTimersByTime(10_000));
-
-    expect(result.current?.state).toBe("failed");
-  });
 });

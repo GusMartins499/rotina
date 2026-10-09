@@ -7,10 +7,16 @@ export type Toast = {
   message: string;
 };
 
-const CONFIRMATION_MS = 1200;
+export const CONFIRMATION_MS = 1200;
+export const REFUSAL_MS = 4000;
 
-export function useSavingToast(saving: boolean, error: string | null): Toast | null {
+export function useSavingToast(
+  saving: boolean,
+  error: string | null,
+  failure = 0,
+): Toast | null {
   const [confirming, setConfirming] = useState(false);
+  const [expiredFailure, setExpiredFailure] = useState<number | null>(null);
   const wasSaving = useRef(saving);
 
   useEffect(() => {
@@ -25,7 +31,16 @@ export function useSavingToast(saving: boolean, error: string | null): Toast | n
     return undefined;
   }, [saving]);
 
-  if (error !== null) {
+  useEffect(() => {
+    if (error === null) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => setExpiredFailure(failure), REFUSAL_MS);
+    return () => clearTimeout(timer);
+  }, [error, failure]);
+
+  if (error !== null && expiredFailure !== failure) {
     return { state: "failed", message: error };
   }
   if (saving) {

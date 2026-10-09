@@ -119,7 +119,7 @@ export function WeekBoard({
     remove,
   });
   const now = useNow();
-  const toast = useSavingToast(week.saving, week.error);
+  const toast = useSavingToast(week.saving, week.error, week.failures);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dragged, setDragged] = useState<Dragged | null>(null);

@@ -58,10 +58,16 @@ export function useAllocation({
   const [syncedFrom, setSyncedFrom] = useState(() => signatureOf(initialBlocks));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failures, setFailures] = useState(0);
   const [announcement, setAnnouncement] = useState("");
 
+  function fail(message: string) {
+    setError(message);
+    setFailures((count) => count + 1);
+  }
+
   function refuse(reason: keyof typeof REFUSAL) {
-    setError(REFUSAL[reason]);
+    fail(REFUSAL[reason]);
     setAnnouncement(REFUSAL[reason]);
   }
 
@@ -89,7 +95,7 @@ export function useAllocation({
 
     if (!result.ok) {
       setBlocks(snapshot);
-      setError(result.error);
+      fail(result.error);
     }
   }
 
@@ -182,6 +188,7 @@ export function useAllocation({
     blocks,
     saving,
     error,
+    failures,
     announcement,
     allocate: place,
     move: (target: PlacedBlock, to: { weekday: number; startMinute: number }) =>
