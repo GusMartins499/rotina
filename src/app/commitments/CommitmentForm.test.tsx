@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PALETTE } from "../../domain/commitment";
 import { CommitmentForm } from "./CommitmentForm";
+import { COLOR_NAMES } from "./colorNames";
 
 describe("commitment form", () => {
   it("submits name, color and daily hours", async () => {
@@ -156,5 +157,28 @@ describe("commitment form", () => {
     render(<CommitmentForm onSubmit={vi.fn()} />);
 
     expect(screen.getAllByRole("radio")).toHaveLength(PALETTE.length);
+  });
+
+  it("moves the colour selection with the arrow keys", async () => {
+    render(<CommitmentForm onSubmit={vi.fn()} />);
+    const [first, second] = screen.getAllByRole("radio");
+
+    first.focus();
+    await userEvent.keyboard("{ArrowRight}");
+
+    expect(second).toBeChecked();
+    expect(second).toHaveFocus();
+  });
+
+  it("announces each colour by name instead of its hex code", () => {
+    render(<CommitmentForm onSubmit={vi.fn()} />);
+
+    for (const color of PALETTE) {
+      expect(screen.getByRole("radio", { name: COLOR_NAMES[color] })).toHaveAttribute(
+        "value",
+        color,
+      );
+      expect(screen.queryByRole("radio", { name: color })).toBeNull();
+    }
   });
 });

@@ -4,6 +4,7 @@ import { useId, useState, type FormEvent } from "react";
 import { PALETTE, commitmentInputSchema, type CommitmentInput } from "../../domain/commitment";
 import { formatDuration } from "../../domain/time";
 import { parseDuration } from "../../domain/duration";
+import { COLOR_NAMES } from "./colorNames";
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
 
@@ -86,7 +87,7 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
               checked={value.color === color}
               onChange={() => setValue({ ...value, color })}
             />
-            {color}
+            <span className="visually-hidden">{COLOR_NAMES[color]}</span>
           </label>
         ))}
       </fieldset>
