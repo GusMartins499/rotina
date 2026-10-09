@@ -1,6 +1,3 @@
-import { openDatabase } from "./db";
-import { runMigrations } from "./runMigrations";
+import { migrateDatabase } from "./migrateDatabase";
 
-const { connection } = openDatabase();
-runMigrations(connection);
-connection.close();
+migrateDatabase();
