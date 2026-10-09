@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useId } from "react";
 import { weekdayIndexOf } from "../../domain/week";
 
 type Props = {
@@ -9,27 +10,46 @@ type Props = {
 const SUNDAY = 6;
 
 export function WeekSwitcher({ focus, today }: Props) {
+  const hintId = useId();
   const canConfigure = weekdayIndexOf(today) === SUNDAY;
+  const isCurrent = focus === "current";
 
   return (
-    <div className="week-switcher">
-      <span data-testid="week-focus">
-        {focus === "next" ? "Próxima semana" : "Semana atual"}
-      </span>
+    <div className="week-switcher" role="group" aria-label="Semana em foco">
+      <Link
+        href="/"
+        className="week-option"
+        aria-current={isCurrent ? "true" : undefined}
+        data-testid={isCurrent ? "week-focus" : undefined}
+      >
+        Atual
+      </Link>
 
-      {focus === "next" ? (
-        <Link href="/">Voltar à semana atual</Link>
-      ) : canConfigure ? (
-        <Link href="/?week=next">Configurar próxima semana</Link>
-      ) : (
+      {isCurrent && !canConfigure ? (
         <>
-          <button type="button" data-testid="configure-next" disabled>
-            Configurar próxima semana
+          <button
+            type="button"
+            className="week-option"
+            data-testid="configure-next"
+            aria-disabled="true"
+            aria-describedby={hintId}
+            onClick={(event) => event.preventDefault()}
+          >
+            Próxima
           </button>
-          <small data-testid="configure-hint">
+          <small id={hintId} className="week-hint" role="tooltip" data-testid="configure-hint">
             A próxima semana é configurada no domingo.
           </small>
         </>
+      ) : (
+        <Link
+          href="/?week=next"
+          className="week-option"
+          aria-current={isCurrent ? undefined : "true"}
+          data-testid={isCurrent ? undefined : "week-focus"}
+        >
+          Próxima
+        </Link>
       )}
     </div>
   );

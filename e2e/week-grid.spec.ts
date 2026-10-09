@@ -110,15 +110,15 @@ test("removes a block by dragging it out of the grid", async ({ page }) => {
 
 test("switches focus between the current and the next week", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByTestId("week-focus")).toHaveText("Semana atual");
+  await expect(page.getByTestId("week-focus")).toHaveText("Atual");
 
   await page.goto("/?week=next");
 
-  await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
+  await expect(page.getByTestId("week-focus")).toHaveText("Próxima");
   await expect(page.getByTestId("block-0-120")).toHaveCount(0);
 
-  await page.getByRole("link", { name: /voltar/i }).click();
-  await expect(page.getByTestId("week-focus")).toHaveText("Semana atual");
+  await page.getByRole("link", { name: "Atual" }).click();
+  await expect(page.getByTestId("week-focus")).toHaveText("Atual");
 });
 
 test("updates the daily remainder after each drop and never refuses one past the goal", async ({
@@ -344,7 +344,7 @@ test("lists a new commitment in the drag drawer without a reload", async ({ page
 test("keeps the visible labels in portuguese", async ({ page }) => {
   await page.goto("/?week=next");
 
-  await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
+  await expect(page.getByTestId("week-focus")).toHaveText("Próxima");
   await expect(page.getByTestId("weekday-head-0")).toHaveText(/^SEG \d{2}$/);
   await expect(page.getByText(/Semana do dia/)).toBeVisible();
 });
@@ -378,7 +378,7 @@ test("configuring the next week is unavailable outside sunday", async ({ page })
   const isSunday = new Date().getDay() === 0;
 
   if (isSunday) {
-    await expect(page.getByRole("link", { name: /próxima semana/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Próxima" })).toBeVisible();
   } else {
     await expect(page.getByTestId("configure-next")).toBeDisabled();
     await expect(page.getByTestId("configure-hint")).toContainText("domingo");
