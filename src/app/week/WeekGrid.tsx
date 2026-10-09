@@ -77,6 +77,7 @@ function Slot({
       ref={setNodeRef}
       data-testid={`slot-${weekday}-${minute}`}
       data-half={isWholeHour(minute) ? undefined : "true"}
+      data-time={timeLabel(minute)}
       data-over={isOver || targeted ? "true" : undefined}
       data-cursor={targeted ? "true" : undefined}
       data-past={past ? "true" : undefined}
@@ -326,7 +327,7 @@ export function WeekGrid({
           <div className="weekday-head" data-testid={`weekday-head-${weekday}`}>
             {weekdayHeading(label, dates?.[weekday])}
           </div>
-          <div className="day-slots">
+          <div className="day-slots" data-end-time={timeLabel(MINUTES_PER_DAY)}>
             {marker?.weekday === weekday && (
               <div
                 data-testid="now-line"

@@ -547,3 +547,84 @@ test.describe("drop preview", () => {
     await expect(page.getByTestId("drop-preview")).toHaveCount(0);
   });
 });
+
+async function markOf(slot: Locator): Promise<string> {
+  return slot.evaluate((element) => getComputedStyle(element, "::before").content);
+}
+
+test.describe("mobile time axis", () => {
+  test("labels the whole hours inside the day column on narrow screens", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+
+    await expect(page.getByTestId("hour-label-180")).toBeHidden();
+    expect(await markOf(page.getByTestId("slot-0-180"))).toBe('"09:00"');
+    expect(await markOf(page.getByTestId("slot-0-210"))).toBe("none");
+  });
+
+  test("does not duplicate the hour axis on desktop", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+
+    await expect(page.getByTestId("hour-label-180")).toBeVisible();
+    expect(await markOf(page.getByTestId("slot-0-180"))).toBe("none");
+    const end = await page
+      .getByTestId("slot-0-0")
+      .evaluate((slot) => getComputedStyle(slot.parentElement as Element, "::after").content);
+    expect(end).toBe("none");
+  });
+
+  test("keeps the label from colliding with a block", async ({ page }) => {
+    await page.goto("/?week=next");
+    await dragOnto(page, page.getByTestId("drawer-commitment-1"), page.getByTestId("slot-1-180"));
+    await expect(page.getByTestId("block-1-180")).toBeVisible();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload();
+
+    const covered = page.getByTestId("slot-1-240");
+    await covered.scrollIntoViewIfNeeded();
+    const box = await covered.boundingBox();
+    if (box === null) {
+      throw new Error("the 10:00 slot is not visible");
+    }
+    const topmost = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.closest("[data-testid]")?.getAttribute("data-testid"),
+      { x: box.x + 8, y: box.y + 6 },
+    );
+
+    expect(topmost).toBe("block-1-180");
+  });
+
+  test("keeps the grid usable with every hour empty", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/?week=next");
+
+    expect(await markOf(page.getByTestId("slot-2-0"))).toBe('"06:00"');
+    expect(await markOf(page.getByTestId("slot-2-960"))).toBe('"22:00"');
+    const end = await page
+      .getByTestId("slot-2-0")
+      .evaluate((slot) => getComputedStyle(slot.parentElement as Element, "::after").content);
+    expect(end).toBe('"23:00"');
+  });
+
+  test("keeps the now line aligned with the labels", async ({ page }) => {
+    const today = new Date();
+    await page.clock.setFixedTime(
+      new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0),
+    );
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/");
+
+    const weekday = (today.getDay() + 6) % 7;
+    const slot = page.getByTestId(`slot-${weekday}-480`);
+    const line = await page.getByTestId("now-line").boundingBox();
+    const box = await slot.boundingBox();
+    if (line === null || box === null) {
+      throw new Error("the now line or the 14:00 slot is not visible");
+    }
+
+    expect(await markOf(slot)).toBe('"14:00"');
+    expect(Math.abs(line.y - box.y)).toBeLessThanOrEqual(1);
+  });
+});

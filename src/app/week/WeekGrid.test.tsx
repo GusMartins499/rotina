@@ -224,4 +224,12 @@ describe("weekday heading", () => {
     expect(screen.getByTestId("weekday-head-0")).toHaveTextContent("SEG 12");
     expect(screen.getByTestId("weekday-head-2")).toHaveTextContent("QUA 14");
   });
+
+  it("writes the time of each slot for the mobile hour marks", () => {
+    renderGrid();
+
+    expect(screen.getByTestId("slot-0-180")).toHaveAttribute("data-time", "09:00");
+    expect(screen.getByTestId("slot-0-210")).toHaveAttribute("data-time", "09:30");
+    expect(screen.getByTestId("slot-0-0").parentElement).toHaveAttribute("data-end-time", "23:00");
+  });
 });
