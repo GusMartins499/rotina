@@ -834,15 +834,15 @@ button[disabled] {
 }
 
 .settings-drawer fieldset label {
-  width: 22px;
-  height: 22px;
+  position: relative;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  overflow: hidden;
-  text-indent: -999px;
   cursor: pointer;
   border: 2px solid transparent;
   transition:
     border-color var(--fast),
+    box-shadow var(--fast),
     transform var(--fast);
 }
 
@@ -854,8 +854,20 @@ button[disabled] {
   border-color: var(--text);
 }
 
+.settings-drawer fieldset label:has(input:focus-visible) {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
+}
+
 .settings-drawer fieldset input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   opacity: 0;
+  cursor: pointer;
 }
 
 .settings-drawer button[type="submit"] {
