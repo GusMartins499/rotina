@@ -26,3 +26,11 @@ export function focusedDayOf(todayIso: string, focusedMonday: string): FocusedDa
   }
   return { weekday: 0, isToday: false };
 }
+
+export function datesOfWeek(mondayDate: string): number[] {
+  const monday = new Date(`${mondayDate}T00:00:00Z`).getTime();
+
+  return Array.from({ length: 7 }, (_, index) =>
+    new Date(monday + index * MILLISECONDS_PER_DAY).getUTCDate(),
+  );
+}
