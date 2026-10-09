@@ -1048,7 +1048,35 @@ button[disabled] {
   }
 
   .day-slots {
-    grid-template-rows: repeat(34, 15px) var(--hour-label-height);
+    --step-height: 15px;
+    grid-template-rows: repeat(34, var(--step-height)) var(--hour-label-height);
+  }
+
+  .slot {
+    position: relative;
+  }
+
+  .slot:not([data-half])::before,
+  .day-slots::after {
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    color: var(--faint);
+    pointer-events: none;
+  }
+
+  .slot:not([data-half])::before {
+    content: attr(data-time);
+    position: absolute;
+    top: 2px;
+    left: 4px;
+  }
+
+  .day-slots::after {
+    content: attr(data-end-time);
+    grid-row: 35;
+    grid-column: 1;
+    padding: 2px 0 0 4px;
   }
 
   .day-column[data-past="true"] {
