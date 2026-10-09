@@ -5,8 +5,8 @@
   --line: #ededf1;
   --line-strong: #dedee4;
   --text: #1b1b1f;
-  --muted: #6e6e78;
-  --faint: #a2a2ab;
+  --muted: #64646e;
+  --faint: #6e6e78;
   --accent: #5b5bd6;
   --accent-soft: #eeeefc;
   --danger: #c23b3b;
@@ -263,7 +263,6 @@ button[disabled] {
 .hour-label-half {
   font-size: 9px;
   color: var(--faint);
-  opacity: 0.75;
 }
 
 .hour-label-end {
@@ -359,7 +358,6 @@ button[disabled] {
   font-size: 10px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  opacity: 0.82;
   white-space: nowrap;
 }
 
