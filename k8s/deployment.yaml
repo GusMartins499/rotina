@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rotina
+  namespace: rotina
+  labels:
+    app: rotina
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rotina
+  template:
+    metadata:
+      labels:
+        app: rotina
+    spec:
+      serviceAccountName: rotina
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: app
+          image: ghcr.io/gusmartins499/rotina
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: DATABASE_PATH
+              value: /data/rotina.db
+          volumeMounts:
+            - name: db
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+        - name: tailscale
+          image: tailscale/tailscale:v1.98.9
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: tailscale-auth
+                  key: TS_AUTHKEY
+            - name: TS_KUBE_SECRET
+              value: tailscale-state
+            - name: TS_USERSPACE
+              value: "true"
+            - name: TS_HOSTNAME
+              value: rotina
+            - name: TS_SERVE_CONFIG
+              value: /etc/tailscale/serve.json
+          volumeMounts:
+            - name: tailscale-serve
+              mountPath: /etc/tailscale
+              readOnly: true
+          resources:
+            requests:
+              cpu: 20m
+              memory: 64Mi
+            limits:
+              memory: 192Mi
+      volumes:
+        - name: db
+          persistentVolumeClaim:
+            claimName: rotina-db
+        - name: tailscale-serve
+          configMap:
+            name: tailscale-serve
