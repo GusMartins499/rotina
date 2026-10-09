@@ -40,6 +40,21 @@ test("keeps the week readable at 390px with no horizontal scroll", async ({ page
   await expect(page.getByTestId("weekday-head-0")).toBeVisible();
 });
 
+for (const width of [390, 768]) {
+  test(`keeps every weekday heading inside its column at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/");
+
+    for (let weekday = 0; weekday < 7; weekday += 1) {
+      const overflow = await page
+        .getByTestId(`weekday-head-${weekday}`)
+        .evaluate((head) => head.scrollWidth - head.clientWidth);
+
+      expect(overflow).toBeLessThanOrEqual(0);
+    }
+  });
+}
+
 test("splits TRABALHO into two blocks and clears the daily remainder", async ({ page }) => {
   await page.goto("/");
 
@@ -330,7 +345,7 @@ test("keeps the visible labels in portuguese", async ({ page }) => {
   await page.goto("/?week=next");
 
   await expect(page.getByTestId("week-focus")).toHaveText("Próxima semana");
-  await expect(page.getByTestId("weekday-head-0")).toHaveText("SEGUNDA");
+  await expect(page.getByTestId("weekday-head-0")).toHaveText(/^SEG \d{2}$/);
   await expect(page.getByText(/Semana do dia/)).toBeVisible();
 });
 

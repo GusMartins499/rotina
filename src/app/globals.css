@@ -9,6 +9,8 @@
   --faint: #a2a2ab;
   --accent: #5b5bd6;
   --accent-soft: #eeeefc;
+  --past: color-mix(in srgb, var(--bg) 65%, transparent);
+  --past-line: color-mix(in srgb, var(--line-strong) 55%, transparent);
   --danger: #c23b3b;
   --ok: #1a7f4b;
 
@@ -236,8 +238,26 @@ button[disabled] {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.07em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 4px;
   color: var(--muted);
   border-bottom: 1px solid var(--line-strong);
+}
+
+.day-column[data-past="true"] {
+  background: var(--past);
+}
+
+.day-column[data-past="true"] .slot,
+.slot[data-past="true"] {
+  border-bottom-color: var(--past-line);
+}
+
+.slot[data-past="true"] {
+  background: var(--past);
 }
 
 .day-column[data-today="true"] .weekday-head {
@@ -288,7 +308,8 @@ button[disabled] {
   border-bottom: 1px dashed color-mix(in srgb, var(--line-strong) 70%, transparent);
 }
 
-.slot[data-over="true"] {
+.slot[data-over="true"],
+.slot[data-past="true"][data-over="true"] {
   background: var(--accent-soft);
 }
 
@@ -974,6 +995,10 @@ button[disabled] {
 
   .day-slots {
     grid-template-rows: repeat(34, 15px) var(--hour-label-height);
+  }
+
+  .day-column[data-past="true"] {
+    background: color-mix(in srgb, var(--bg) 40%, transparent);
   }
 
   .block {

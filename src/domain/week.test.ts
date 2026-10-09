@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { focusedDayOf, mondayOf, weekdayIndexOf } from "./week";
+import { datesOfWeek, focusedDayOf, mondayOf, weekdayIndexOf } from "./week";
 
 describe("monday of a week", () => {
   it("returns the same date when it is already a monday", () => {
@@ -47,5 +47,15 @@ describe("focused day", () => {
 
   it("keeps sunday inside the week it closes", () => {
     expect(focusedDayOf("2026-09-27", "2026-09-21")).toEqual({ weekday: 6, isToday: true });
+  });
+});
+
+describe("dates of a week", () => {
+  it("returns the day of the month of each of the seven days", () => {
+    expect(datesOfWeek("2026-10-05")).toEqual([5, 6, 7, 8, 9, 10, 11]);
+  });
+
+  it("restarts the count across a month boundary", () => {
+    expect(datesOfWeek("2026-09-28")).toEqual([28, 29, 30, 1, 2, 3, 4]);
   });
 });

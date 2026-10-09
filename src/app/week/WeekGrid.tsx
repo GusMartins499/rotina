@@ -19,7 +19,16 @@ import {
 } from "../../domain/time";
 import { WEEKDAY_NAMES } from "../../domain/announce";
 import { planResize } from "../../domain/rearrange";
-import { nowMarker } from "../../domain/now";
+import {
+  isDayPast,
+  isIntervalPast,
+  isMinutePast,
+  nowMarker,
+  pastBoundary,
+  type PastBoundary,
+} from "../../domain/now";
+import { datesOfWeek } from "../../domain/week";
+import { desaturate, PAST_SATURATION_LOSS } from "../../domain/color";
 import type { Commitment } from "../../repository/schema";
 import type { PlacedBlock } from "./useAllocation";
 import { useKeyboardCursor, type Cursor } from "./useKeyboardCursor";
@@ -36,6 +45,15 @@ type Props = {
   dropPreview?: Preview | null;
 };
 
+const ABBREVIATION_LENGTH = 3;
+
+function weekdayHeading(label: string, dayOfMonth: number | undefined): string {
+  const abbreviation = label.slice(0, ABBREVIATION_LENGTH);
+  return dayOfMonth === undefined
+    ? abbreviation
+    : `${abbreviation} ${String(dayOfMonth).padStart(2, "0")}`;
+}
+
 function rowOf(minute: number): number {
   return minute / STEP_MINUTES + 1;
 }
@@ -44,10 +62,12 @@ function Slot({
   weekday,
   minute,
   cursor,
+  past,
 }: {
   weekday: number;
   minute: number;
   cursor: Cursor | null;
+  past: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `slot-${weekday}-${minute}` });
   const targeted = cursor !== null && cursor.weekday === weekday && cursor.startMinute === minute;
@@ -59,6 +79,7 @@ function Slot({
       data-half={isWholeHour(minute) ? undefined : "true"}
       data-over={isOver || targeted ? "true" : undefined}
       data-cursor={targeted ? "true" : undefined}
+      data-past={past ? "true" : undefined}
       className="slot"
       style={{ gridRow: `${rowOf(minute)} / ${rowOf(minute) + 1}` }}
     />
@@ -73,6 +94,7 @@ function Block({
   keyboard,
   onPreview,
   siblings,
+  past,
 }: {
   block: PlacedBlock;
   commitment: Commitment | undefined;
@@ -81,6 +103,7 @@ function Block({
   keyboard: KeyboardControls;
   onPreview: (preview: Preview | null) => void;
   siblings: PlacedBlock[];
+  past: boolean;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `block-${block.weekday}-${block.startMinute}`,
@@ -209,13 +232,17 @@ function Block({
       {...attributes}
       data-testid={`block-${block.weekday}-${block.startMinute}`}
       data-grabbed={grabbed ? "true" : undefined}
+      data-past={past ? "true" : undefined}
       data-compact={durationOf(block) <= STEP_MINUTES ? "true" : undefined}
       aria-grabbed={grabbed}
       className="block"
       aria-label={`${commitment?.name ?? "Compromisso"}, ${WEEKDAY_NAMES[block.weekday]}, ${timeLabel(block.startMinute)} às ${timeLabel(block.endMinute)}`}
       style={{
         gridRow: `${rowOf(block.startMinute)} / ${rowOf(block.endMinute)}`,
-        backgroundColor: commitment?.color,
+        backgroundColor:
+          past && commitment !== undefined
+            ? desaturate(commitment.color, PAST_SATURATION_LOSS)
+            : commitment?.color,
         opacity: isDragging ? 0.4 : 1,
       }}
     >
@@ -267,6 +294,8 @@ export function WeekGrid({
   };
   const steps = stepsOfDay();
   const marker = now === null ? null : nowMarker(now, focusedMonday);
+  const past: PastBoundary | null = now === null ? null : pastBoundary(now, focusedMonday);
+  const dates = focusedMonday === "" ? null : datesOfWeek(focusedMonday);
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
 
   return (
@@ -292,9 +321,10 @@ export function WeekGrid({
           key={label}
           className="day-column"
           data-today={marker?.weekday === weekday ? "true" : undefined}
+          data-past={isDayPast(past, weekday) ? "true" : undefined}
         >
           <div className="weekday-head" data-testid={`weekday-head-${weekday}`}>
-            {label}
+            {weekdayHeading(label, dates?.[weekday])}
           </div>
           <div className="day-slots">
             {marker?.weekday === weekday && (
@@ -305,7 +335,13 @@ export function WeekGrid({
               />
             )}
             {steps.map((minute) => (
-              <Slot key={minute} weekday={weekday} minute={minute} cursor={cursor} />
+              <Slot
+                key={minute}
+                weekday={weekday}
+                minute={minute}
+                cursor={cursor}
+                past={!isDayPast(past, weekday) && isMinutePast(past, weekday, minute)}
+              />
             ))}
             {preview !== null && preview.weekday === weekday && (
               <div
@@ -335,6 +371,7 @@ export function WeekGrid({
                   keyboard={keyboard}
                   onPreview={setResizePreview}
                   siblings={blocks}
+                  past={isIntervalPast(past, block.weekday, block)}
                 />
               ))}
           </div>
