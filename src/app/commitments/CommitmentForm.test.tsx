@@ -181,4 +181,56 @@ describe("commitment form", () => {
       expect(screen.queryByRole("radio", { name: color })).toBeNull();
     }
   });
+
+  it("shows a live preview of the block while filling the form", async () => {
+    render(<CommitmentForm onSubmit={vi.fn()} />);
+
+    await userEvent.type(screen.getByLabelText(/nome/i), "Academia");
+    await userEvent.click(screen.getByRole("radio", { name: COLOR_NAMES[PALETTE[1]] }));
+    await userEvent.type(screen.getByLabelText(/carga/i), "1h30");
+
+    const preview = screen.getByTestId("commitment-preview");
+    expect(preview).toHaveTextContent("Academia");
+    expect(preview).toHaveTextContent("1h30/dia");
+    expect(preview).toHaveStyle({ backgroundColor: PALETTE[1] });
+  });
+
+  it("leaves the load out of the preview while the typed load is not a duration", async () => {
+    render(<CommitmentForm onSubmit={vi.fn()} />);
+
+    await userEvent.type(screen.getByLabelText(/carga/i), "abc");
+
+    expect(screen.getByTestId("commitment-preview")).not.toHaveTextContent("/dia");
+  });
+
+  it("offers no cancel button unless asked to", () => {
+    render(<CommitmentForm onSubmit={vi.fn()} />);
+
+    expect(screen.queryByRole("button", { name: /cancelar/i })).toBeNull();
+  });
+
+  it("cancels with the given label", async () => {
+    const onCancel = vi.fn();
+    render(<CommitmentForm onSubmit={vi.fn()} onCancel={onCancel} cancelLabel="Cancelar edição" />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar edição" }));
+
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("cancels with Escape from inside the form", async () => {
+    const onCancel = vi.fn();
+    render(<CommitmentForm onSubmit={vi.fn()} onCancel={onCancel} />);
+
+    screen.getByLabelText(/nome/i).focus();
+    await userEvent.keyboard("{Escape}");
+
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("focuses the name field when asked to", () => {
+    render(<CommitmentForm onSubmit={vi.fn()} autoFocus />);
+
+    expect(screen.getByLabelText(/nome/i)).toHaveFocus();
+  });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { PALETTE, commitmentInputSchema, type CommitmentInput } from "../../domain/commitment";
 import { formatDuration } from "../../domain/time";
 import { parseDuration } from "../../domain/duration";
@@ -12,11 +12,21 @@ type Props = {
   onSubmit: (input: CommitmentInput) => Promise<SubmitResult>;
   initialValue?: CommitmentInput;
   submitLabel?: string;
+  onCancel?: () => void;
+  cancelLabel?: string;
+  autoFocus?: boolean;
 };
 
 const EMPTY: CommitmentInput = { name: "", color: PALETTE[0], dailyMinutes: null };
 
-export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" }: Props) {
+export function CommitmentForm({
+  onSubmit,
+  initialValue,
+  submitLabel = "Salvar",
+  onCancel,
+  cancelLabel = "Cancelar",
+  autoFocus = false,
+}: Props) {
   const [value, setValue] = useState<CommitmentInput>(initialValue ?? EMPTY);
   const [dailyLoadText, setDailyLoadText] = useState(
     initialValue?.dailyMinutes === undefined || initialValue?.dailyMinutes === null
@@ -25,6 +35,21 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
   );
   const [error, setError] = useState<string | null>(null);
   const fieldId = useId();
+  const nameInput = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (autoFocus) {
+      nameInput.current?.focus();
+    }
+  }, [autoFocus]);
+
+  function handleKeyDown(event: KeyboardEvent<HTMLFormElement>) {
+    if (event.key === "Escape" && onCancel !== undefined) {
+      event.preventDefault();
+      event.stopPropagation();
+      onCancel();
+    }
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -59,9 +84,10 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="commitment-form">
       <label htmlFor={`${fieldId}-name`}>Nome</label>
       <input
+        ref={nameInput}
         id={`${fieldId}-name`}
         value={value.name}
         onChange={(event) => setValue({ ...value, name: event.target.value })}
@@ -94,8 +120,42 @@ export function CommitmentForm({ onSubmit, initialValue, submitLabel = "Salvar" 
 
       {error !== null && <p role="alert">{error}</p>}
 
-      <button type="submit">{submitLabel}</button>
+      <BlockPreview name={value.name} color={value.color} dailyLoadText={dailyLoadText} />
+
+      <div className="commitment-form-actions">
+        {onCancel !== undefined && (
+          <button type="button" className="commitment-form-cancel" onClick={onCancel}>
+            {cancelLabel}
+          </button>
+        )}
+        <button type="submit">{submitLabel}</button>
+      </div>
     </form>
+  );
+}
+
+type PreviewProps = {
+  name: string;
+  color: CommitmentInput["color"];
+  dailyLoadText: string;
+};
+
+function BlockPreview({ name, color, dailyLoadText }: PreviewProps) {
+  const dailyMinutes = parseDuration(dailyLoadText);
+  const typedName = name.trim();
+
+  return (
+    <div
+      className="drawer-item commitment-preview"
+      data-testid="commitment-preview"
+      aria-hidden="true"
+      style={{ backgroundColor: color }}
+    >
+      <span className="drawer-item-name" data-empty={typedName === "" ? "true" : undefined}>
+        {typedName === "" ? "Nome do compromisso" : typedName}
+      </span>
+      {dailyMinutes !== null && <small>{formatDuration(dailyMinutes)}/dia</small>}
+    </div>
   );
 }
 

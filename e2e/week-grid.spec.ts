@@ -330,11 +330,13 @@ test("closes the settings drawer with Escape and returns focus", async ({ page }
 test("lists a new commitment in the drag drawer without a reload", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Configurações" }).click();
+  await page.getByRole("button", { name: "Novo compromisso" }).click();
 
   await page.getByLabel(/nome/i).fill("Academia");
   await page.getByRole("button", { name: /salvar compromisso/i }).click();
 
-  await expect(page.getByRole("dialog")).toContainText("Academia");
+  await expect(page.getByRole("dialog").getByRole("listitem", { name: /Academia/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Novo compromisso" })).toBeFocused();
   await page.keyboard.press("Escape");
 
   await openCommitments(page);

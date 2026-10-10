@@ -8,6 +8,7 @@ async function openColourPicker(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: "Configurações" }).click();
   const drawer = page.getByRole("dialog", { name: "Configurações" });
+  await drawer.getByRole("button", { name: "Novo compromisso" }).click();
   const colours = drawer.getByRole("group", { name: "Cor" }).first();
   await drawer.getByLabel("Carga diária").first().focus();
   await page.keyboard.press("Tab");
