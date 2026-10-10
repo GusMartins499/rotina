@@ -1029,6 +1029,14 @@ button[disabled] {
     white-space: normal;
   }
 
+  .week-switcher small {
+    right: 0;
+    left: auto;
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    white-space: normal;
+  }
+
   .resize-handle {
     display: none;
   }
