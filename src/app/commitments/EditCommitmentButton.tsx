@@ -20,21 +20,27 @@ export function EditCommitmentButton({ value, onSave }: Props) {
     );
   }
 
+  return <EditCommitmentForm value={value} onSave={onSave} onClose={() => setEditing(false)} />;
+}
+
+type FormProps = Props & {
+  onClose: () => void;
+};
+
+export function EditCommitmentForm({ value, onSave, onClose }: FormProps) {
   return (
-    <>
-      <CommitmentForm
-        initialValue={value}
-        onSubmit={async (input) => {
-          const result = await onSave(input);
-          if (result.ok) {
-            setEditing(false);
-          }
-          return result;
-        }}
-      />
-      <button type="button" onClick={() => setEditing(false)}>
-        Cancelar edição
-      </button>
-    </>
+    <CommitmentForm
+      initialValue={value}
+      autoFocus
+      cancelLabel="Cancelar edição"
+      onCancel={onClose}
+      onSubmit={async (input) => {
+        const result = await onSave(input);
+        if (result.ok) {
+          onClose();
+        }
+        return result;
+      }}
+    />
   );
 }

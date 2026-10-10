@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import type { SubmitResult } from "./CommitmentForm";
 
 type Props = {
@@ -25,28 +25,65 @@ export function DeleteCommitmentButton({ name, allocatedBlocks, onDelete }: Prop
     <>
       <button
         type="button"
-        onClick={() => (allocatedBlocks > 0 ? setConfirming(true) : remove())}
+        onClick={() => (needsConfirmation(allocatedBlocks) ? setConfirming(true) : remove())}
       >
         Excluir
       </button>
 
       {confirming && (
-        <div role="dialog" aria-label={`Excluir ${name}`}>
-          <p>
-            {name} está alocado em {allocatedBlocks}{" "}
-            {allocatedBlocks === 1 ? "bloco" : "blocos"} da semana. Excluir o compromisso
-            remove {allocatedBlocks === 1 ? "esse bloco" : "esses blocos"} também.
-          </p>
-          <button type="button" onClick={remove}>
-            Confirmar exclusão
-          </button>
-          <button type="button" onClick={() => setConfirming(false)}>
-            Cancelar
-          </button>
-        </div>
+        <DeleteConfirmation
+          name={name}
+          allocatedBlocks={allocatedBlocks}
+          onConfirm={remove}
+          onCancel={() => setConfirming(false)}
+        />
       )}
 
       {error !== null && <p role="alert">{error}</p>}
     </>
+  );
+}
+
+export function needsConfirmation(allocatedBlocks: number): boolean {
+  return allocatedBlocks > 0;
+}
+
+type ConfirmationProps = {
+  name: string;
+  allocatedBlocks: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+export function DeleteConfirmation({ name, allocatedBlocks, onConfirm, onCancel }: ConfirmationProps) {
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      onCancel();
+    }
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-label={`Excluir ${name}`}
+      className="delete-confirmation"
+      onKeyDown={handleKeyDown}
+    >
+      <p>
+        {name} está alocado em {allocatedBlocks}{" "}
+        {allocatedBlocks === 1 ? "bloco" : "blocos"} da semana. Excluir o compromisso
+        remove {allocatedBlocks === 1 ? "esse bloco" : "esses blocos"} também.
+      </p>
+      <div className="delete-confirmation-actions">
+        <button type="button" onClick={onCancel} autoFocus>
+          Cancelar
+        </button>
+        <button type="button" className="danger" onClick={onConfirm}>
+          Confirmar exclusão
+        </button>
+      </div>
+    </div>
   );
 }

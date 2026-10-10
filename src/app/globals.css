@@ -909,12 +909,13 @@ button[disabled] {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(380px, 100vw);
+  width: min(480px, 100vw);
   background: var(--surface);
   border-left: 1px solid var(--line-strong);
   box-shadow: -8px 0 32px rgb(var(--shadow-ink) / 0.14);
   z-index: 21;
-  padding: 16px 18px;
+  padding: 20px 24px;
+  overflow-x: hidden;
   overflow-y: auto;
   animation: slide-in var(--spring);
 }
@@ -943,9 +944,45 @@ button[disabled] {
   margin-bottom: 8px;
 }
 
+.settings-count {
+  font-weight: 500;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.settings-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.settings-group-head h3 {
+  margin-bottom: 0;
+}
+
+.settings-drawer .settings-add {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    background var(--fast),
+    border-color var(--fast);
+}
+
+.settings-drawer .settings-add:hover {
+  background: var(--bg);
+  border-color: var(--faint);
+}
+
 .settings-section {
-  padding-top: 16px;
-  margin-top: 16px;
+  padding-top: 20px;
+  margin-top: 24px;
   border-top: 1px solid var(--line);
 }
 
@@ -970,9 +1007,7 @@ button[disabled] {
 .settings-drawer form {
   display: grid;
   gap: 6px;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--line);
+  min-width: 0;
 }
 
 .settings-drawer label {
@@ -982,11 +1017,14 @@ button[disabled] {
 
 .settings-drawer input[type="text"],
 .settings-drawer input:not([type]) {
+  width: 100%;
+  min-width: 0;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  padding: 7px 9px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
   font: inherit;
-  font-size: 12px;
+  font-size: 13px;
   background: var(--surface);
   color: var(--text);
 }
@@ -994,23 +1032,24 @@ button[disabled] {
 .settings-drawer fieldset {
   border: 0;
   padding: 0;
-  margin: 4px 0;
+  margin: 0 0 6px;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
 }
 
 .settings-drawer legend {
   font-size: 11px;
   color: var(--muted);
   padding: 0;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .settings-drawer fieldset label {
   position: relative;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid transparent;
@@ -1044,23 +1083,75 @@ button[disabled] {
   cursor: pointer;
 }
 
-.settings-drawer button[type="submit"] {
-  border: 1px solid var(--text);
-  background: var(--text);
-  color: var(--on-inverse);
-  border-radius: var(--radius);
-  padding: 8px 13px;
+.commitment-preview {
+  cursor: default;
+  margin-top: 4px;
   font-size: 12px;
-  font-weight: 500;
-  justify-self: start;
-  transition: opacity var(--fast);
+  min-width: 0;
 }
 
-.settings-drawer button[type="submit"]:hover {
+.commitment-preview:hover {
+  transform: none;
+}
+
+.commitment-preview .drawer-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.commitment-preview .drawer-item-name[data-empty] {
+  opacity: 0.75;
+  font-style: italic;
+}
+
+.commitment-form-actions,
+.delete-confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.settings-drawer .commitment-form-actions button,
+.settings-drawer .delete-confirmation-actions button {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 7px 13px;
+  font-size: 12px;
+  font-weight: 500;
+  transition:
+    opacity var(--fast),
+    background var(--fast);
+}
+
+.settings-drawer .commitment-form-actions button:hover,
+.settings-drawer .delete-confirmation-actions button:hover {
+  background: var(--bg);
+}
+
+.settings-drawer .commitment-form-actions button[type="submit"] {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--on-inverse);
+}
+
+.settings-drawer .delete-confirmation-actions button.danger {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--on-fill);
+}
+
+.settings-drawer .commitment-form-actions button[type="submit"]:hover,
+.settings-drawer .delete-confirmation-actions button.danger:hover {
   opacity: 0.88;
 }
 
-.settings-drawer ul {
+.settings-drawer .commitment-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1069,42 +1160,125 @@ button[disabled] {
   gap: 8px;
 }
 
-.settings-drawer li {
+.settings-drawer .commitment-card {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  padding: 7px 9px;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-}
-
-.settings-drawer li span:first-child {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  flex: 0 0 auto;
-}
-
-.settings-drawer li button {
-  border: 1px solid var(--line-strong);
   background: var(--surface);
-  color: var(--muted);
-  border-radius: 5px;
-  padding: 3px 7px;
+  transition: border-color var(--fast);
+}
+
+.settings-drawer .commitment-card[data-expanded] {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow);
+}
+
+.settings-drawer .commitment-new {
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.commitment-summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  min-height: 52px;
+}
+
+.commitment-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgb(var(--shadow-ink) / 0.08);
+}
+
+.commitment-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.commitment-name {
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commitment-load {
   font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.commitment-actions {
+  display: flex;
+  gap: 2px;
+  transition: opacity var(--fast);
+}
+
+.settings-drawer .icon-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--muted);
   transition:
     color var(--fast),
-    border-color var(--fast);
+    background var(--fast);
 }
 
-.settings-drawer li button:hover {
+.settings-drawer .icon-button:hover {
   color: var(--text);
-  border-color: var(--faint);
+  background: var(--bg);
 }
 
-.settings-drawer [role="dialog"] {
+.settings-drawer .icon-button[aria-label="Excluir"]:hover {
+  color: var(--danger-ink);
+  background: var(--danger-soft);
+}
+
+@media (hover: hover) {
+  .settings-drawer .commitment-card .commitment-actions {
+    opacity: 0;
+  }
+
+  .settings-drawer .commitment-card:hover .commitment-actions,
+  .settings-drawer .commitment-card:focus-within .commitment-actions {
+    opacity: 1;
+  }
+}
+
+.commitment-detail {
+  padding: 4px 12px 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  min-width: 0;
+}
+
+.settings-drawer .commitment-detail [role="alert"],
+.settings-drawer .commitment-new [role="alert"] {
   font-size: 12px;
+  color: var(--danger-ink);
+}
+
+.delete-confirmation {
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--text);
 }
 
 @keyframes fade-in {
