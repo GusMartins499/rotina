@@ -11,7 +11,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { formatDuration, intervalLabel } from "../../domain/time";
 import { focusedDayOf } from "../../domain/week";
 import type { Commitment } from "../../repository/schema";
@@ -20,6 +20,7 @@ import { ThemeToggle } from "../ThemeToggle";
 import { withinGrid } from "./collision";
 import { useNow } from "./NowProvider";
 import { useSavingToast } from "./useSavingToast";
+import { useHoverDisclosure } from "./useHoverDisclosure";
 import { CommitmentDrawer } from "./CommitmentDrawer";
 import { WeekGrid } from "./WeekGrid";
 import { WeeklyLoadButton } from "./WeeklyLoadButton";
@@ -59,6 +60,13 @@ type Props = {
 function parseSlot(id: string): SlotTarget | null {
   const match = /^slot-(\d+)-(\d+)$/.exec(id);
   return match === null ? null : { weekday: Number(match[1]), startMinute: Number(match[2]) };
+}
+
+function isInsideCommitmentDrawer(target: Node): boolean {
+  return (
+    target instanceof Element &&
+    target.closest('#commitment-drawer, [aria-controls="commitment-drawer"]') !== null
+  );
 }
 
 function parseCommitment(id: string): number | null {
@@ -126,14 +134,16 @@ export function WeekBoard({
   const now = useNow();
   const toast = useSavingToast(week.saving, week.error, week.failures);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [dragged, setDragged] = useState<Dragged | null>(null);
   const [overSlot, setOverSlot] = useState<string | null>(null);
   const dropSlot = overSlot === null ? null : parseSlot(overSlot);
   const dropPreview =
     dragged === null || dropSlot === null ? null : dropPreviewOf(dragged, dropSlot, week.blocks);
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
-  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const drawer = useHoverDisclosure({
+    isInside: isInsideCommitmentDrawer,
+    suspended: dragged?.kind === "commitment",
+  });
   const applyRoutine = () => applyTemplate(focus);
   const weekIsEmpty = week.blocks.length === 0;
 
@@ -165,7 +175,7 @@ export function WeekBoard({
     endDrag();
 
     if (dragging?.kind === "commitment") {
-      setDrawerOpen(false);
+      drawer.close();
     }
 
     const block = event.active.data.current?.block as PlacedBlock | undefined;
@@ -205,9 +215,9 @@ export function WeekBoard({
               type="button"
               className="chip"
               data-testid="commitments-toggle"
-              aria-expanded={drawerOpen}
               aria-controls="commitment-drawer"
-              onClick={() => setDrawerOpen((open) => !open)}
+              {...drawer.triggerProps}
+              {...drawer.regionProps}
             >
               <StackIcon />
               Compromissos
@@ -265,9 +275,10 @@ export function WeekBoard({
         commitments={commitments}
         blocks={week.blocks}
         focusedDay={focusedDayOf(now ?? today, focusedMonday)}
-        open={drawerOpen}
+        open={drawer.open}
         dragging={dragged?.kind === "commitment"}
-        onClose={closeDrawer}
+        onClose={drawer.close}
+        hoverProps={drawer.regionProps}
       />
 
       <DragOverlay dropAnimation={null}>
