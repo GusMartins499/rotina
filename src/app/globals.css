@@ -496,7 +496,7 @@ button[disabled] {
   background: var(--accent);
 }
 
-/* Gaveta de compromissos */
+/* Drawer de compromissos */
 
 .drawer {
   position: fixed;
@@ -782,7 +782,7 @@ button[disabled] {
   white-space: nowrap;
 }
 
-/* Gaveta de configurações */
+/* Drawer de configurações */
 
 .scrim {
   position: fixed;

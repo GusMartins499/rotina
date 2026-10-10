@@ -55,4 +55,13 @@ describe("source tree naming", () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it("never shows the word gaveta in the interface", () => {
+    const offenders = walk(SOURCE)
+      .filter((path) => path.endsWith(".ts") || path.endsWith(".tsx"))
+      .filter((path) => !path.endsWith(".test.ts") && !path.endsWith(".test.tsx"))
+      .filter((path) => /gaveta/i.test(readFileSync(path, "utf8")));
+
+    expect(offenders).toEqual([]);
+  });
 });
