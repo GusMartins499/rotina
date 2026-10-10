@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { PALETTE } from "../domain/commitment";
 import { createCommitment } from "./commitments";
 import { createInMemoryDatabase } from "./testing";
-import { applyRollover, applyTemplate, listWeeks, saveTemplate } from "./rollover";
+import { applyRollover, applyTemplate, hasTemplate, listWeeks, saveTemplate } from "./rollover";
 import { createBlock, listBlocksOfWeek, requireWeek } from "./weeks";
 import { weeks } from "./schema";
 import type { AppDatabase } from "./db";
@@ -125,5 +125,24 @@ describe("routine template", () => {
     saveTemplate(db, week.id);
 
     expect(() => applyTemplate(db, week.id)).toThrow(/não está vazia/i);
+  });
+
+  it("reports no template before one is saved", () => {
+    expect(hasTemplate(db)).toBe(false);
+  });
+
+  it("reports a template once a week with blocks is saved", () => {
+    const week = requireWeek(db, "2026-09-21", "current");
+    createBlock(db, { weekId: week.id, commitmentId, weekday: 0, startMinute: 120, endMinute: 420 });
+    saveTemplate(db, week.id);
+
+    expect(hasTemplate(db)).toBe(true);
+  });
+
+  it("reports no template when an empty week was saved as the base routine", () => {
+    const week = requireWeek(db, "2026-09-21", "current");
+    saveTemplate(db, week.id);
+
+    expect(hasTemplate(db)).toBe(false);
   });
 });

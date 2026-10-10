@@ -59,6 +59,7 @@ export async function saveTemplateAction(focus: "current" | "next"): Promise<Wri
   try {
     const { db, week } = weekInFocus(focus);
     saveTemplate(db, week.id);
+    revalidatePath("/");
     return { ok: true };
   } catch (cause) {
     console.error("saving the routine template failed", cause);
