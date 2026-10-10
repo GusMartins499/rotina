@@ -124,6 +124,31 @@ describe("commitment drawer", () => {
 })
 
 
+describe("drawer copy", () => {
+  it("invites the drag without naming the panel", () => {
+    renderDrawer();
+
+    expect(screen.getByText("Arraste para a semana.")).toHaveClass("drawer-hint");
+  });
+
+  it("never names the panel as a gaveta", () => {
+    renderDrawer();
+    renderDrawer([]);
+
+    expect(document.body).not.toHaveTextContent(/gaveta/i);
+  });
+
+  it("keeps the empty state message for a commitment-less drawer", () => {
+    renderDrawer([]);
+
+    expect(
+      screen.getByText(
+        "Nenhum compromisso cadastrado. Cadastre um para poder arrastar para a semana.",
+      ),
+    ).toBeInTheDocument();
+  });
+});
+
 const monday = { weekday: 0, isToday: false };
 const trabalhoOn = (weekday: number, startMinute: number, endMinute: number): LoadBlock => ({
   commitmentId: 1,
