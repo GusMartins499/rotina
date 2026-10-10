@@ -1,7 +1,7 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { useRef } from "react";
+import { useRef, type HTMLAttributes } from "react";
 import { remainingFor, type LoadBlock, type Remainder } from "../../domain/load";
 import { formatDuration, WEEKDAY_LABELS } from "../../domain/time";
 import type { FocusedDay } from "../../domain/week";
@@ -15,6 +15,7 @@ type Props = {
   open: boolean;
   dragging: boolean;
   onClose: () => void;
+  hoverProps?: Pick<HTMLAttributes<HTMLElement>, "onPointerEnter" | "onPointerLeave" | "onBlur">;
 };
 
 function remainderLabel(remainder: Remainder): string {
@@ -80,6 +81,7 @@ export function CommitmentDrawer({
   open,
   dragging,
   onClose,
+  hoverProps,
 }: Props) {
   const panel = useRef<HTMLElement | null>(null);
 
@@ -100,6 +102,7 @@ export function CommitmentDrawer({
       data-open={open ? "true" : "false"}
       data-dragging={dragging ? "true" : undefined}
       inert={!open}
+      {...hoverProps}
     >
       <h2>Compromissos</h2>
       {focusedDay !== null && (
