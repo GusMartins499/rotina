@@ -27,13 +27,21 @@ function declarations(selector: string): Record<string, string> {
   );
 }
 
-function token(value: string): string {
-  const variable = /^var\((--[\w-]+)\)$/.exec(value);
-  return variable ? token(declarations(":root")[variable[1]]) : value;
+type Theme = "light" | "dark";
+
+function tokens(theme: Theme): Record<string, string> {
+  return theme === "dark"
+    ? { ...declarations(":root"), ...declarations(':root[data-theme="dark"]') }
+    : declarations(":root");
 }
 
-function hex(value: string): Rgb {
-  const resolved = token(value);
+function token(value: string, theme: Theme): string {
+  const variable = /^var\((--[\w-]+)\)$/.exec(value);
+  return variable ? token(tokens(theme)[variable[1]], theme) : value;
+}
+
+function hex(value: string, theme: Theme = "light"): Rgb {
+  const resolved = token(value, theme);
   if (!/^#[0-9a-f]{6}$/i.test(resolved)) {
     throw new Error(`colour ${resolved} is not a six digit hex`);
   }
@@ -42,7 +50,11 @@ function hex(value: string): Rgb {
   ) as Rgb;
 }
 
-function renderedColour(cascade: string[], background: string): Rgb {
+function renderedColour(
+  cascade: string[],
+  background: string,
+  theme: Theme = "light",
+): Rgb {
   const rules = cascade.map(declarations);
   const colour = rules.reduce<string | undefined>(
     (inherited, rule) => rule.color ?? inherited,
@@ -53,8 +65,8 @@ function renderedColour(cascade: string[], background: string): Rgb {
     (product, rule) => product * Number(rule.opacity ?? 1),
     1,
   );
-  const foreground = hex(colour);
-  const behind = hex(background);
+  const foreground = hex(colour, theme);
+  const behind = hex(background, theme);
   return foreground.map(
     (channel, index) => channel * opacity + behind[index] * (1 - opacity),
   ) as Rgb;
@@ -68,8 +80,8 @@ function luminance(rgb: Rgb): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-function contrast(foreground: Rgb, background: string): number {
-  const [lighter, darker] = [luminance(foreground), luminance(hex(background))].sort(
+function contrast(foreground: Rgb, background: string, theme: Theme = "light"): number {
+  const [lighter, darker] = [luminance(foreground), luminance(hex(background, theme))].sort(
     (a, b) => b - a,
   );
   return (lighter + 0.05) / (darker + 0.05);
@@ -141,5 +153,78 @@ describe("text contrast", () => {
       parseFloat(declarations(".block")["font-size"]),
     );
     expect(Number(time["font-weight"])).toBeLessThan(Number(name["font-weight"]));
+  });
+});
+
+describe("dark theme contrast", () => {
+  it("keeps every palette colour above 4.5:1 in dark", () => {
+    const ratios = BLOCK_LAYOUTS.flatMap((layout) =>
+      [".block-name", ".block-time"].flatMap((part) =>
+        PALETTE.map((colour) =>
+          contrast(renderedColour([...layout, part], colour, "dark"), colour, "dark"),
+        ),
+      ),
+    );
+
+    expect(Math.min(...ratios)).toBeGreaterThanOrEqual(AA_SMALL_TEXT);
+  });
+
+  it("keeps the hour labels readable and ranked against the dark grid surface", () => {
+    const surface = declarations(".week-grid").background;
+    const whole = renderedColour([".hour-label"], surface, "dark");
+    const half = renderedColour([".hour-label", ".hour-label-half"], surface, "dark");
+
+    expect(contrast(half, surface, "dark")).toBeGreaterThanOrEqual(AA_SMALL_TEXT);
+    expect(contrast(whole, surface, "dark")).toBeGreaterThan(contrast(half, surface, "dark"));
+  });
+
+  it("keeps the drawer hint and the week switcher note readable in dark", () => {
+    const hint = renderedColour([".drawer-hint"], "var(--surface)", "dark");
+    const note = renderedColour([".week-switcher small"], "var(--bg)", "dark");
+
+    expect(contrast(hint, "var(--surface)", "dark")).toBeGreaterThanOrEqual(AA_SMALL_TEXT);
+    expect(contrast(note, "var(--bg)", "dark")).toBeGreaterThanOrEqual(AA_SMALL_TEXT);
+  });
+
+  it("keeps the highlighted state readable without turning it into a bright patch", () => {
+    const highlight = "var(--accent-soft)";
+
+    expect(contrast(hex("var(--accent)", "dark"), highlight, "dark")).toBeGreaterThanOrEqual(
+      AA_SMALL_TEXT,
+    );
+    expect(luminance(hex(highlight, "dark"))).toBeLessThan(luminance(hex("var(--muted)", "dark")));
+  });
+
+  it("keeps the refused preview a dark surface with readable text", () => {
+    const refused = declarations('.placement-preview[data-refused="true"]');
+
+    expect(
+      contrast(hex(refused.color, "dark"), refused.background, "dark"),
+    ).toBeGreaterThanOrEqual(AA_SMALL_TEXT);
+    expect(luminance(hex(refused.background, "dark"))).toBeLessThan(
+      luminance(hex("var(--line-strong)", "dark")),
+    );
+  });
+
+  it("keeps the toast text readable on the inverted surface in both themes", () => {
+    const toast = declarations(".toast");
+
+    for (const theme of ["light", "dark"] as const) {
+      expect(
+        contrast(hex(toast.color, theme), toast.background, theme),
+      ).toBeGreaterThanOrEqual(AA_SMALL_TEXT);
+    }
+  });
+
+  it("keeps the grid lines visible in dark", () => {
+    const surface = declarations(".week-grid").background;
+    const whole = declarations(".slot")["border-bottom"];
+    const half = declarations('.slot[data-half="true"]')["border-bottom"];
+
+    expect(whole).toMatch(/solid var\(--line-strong\)$/);
+    expect(half).toMatch(/dashed/);
+    expect(contrast(hex("var(--line-strong)", "dark"), surface, "dark")).toBeGreaterThanOrEqual(
+      contrast(hex("var(--line-strong)"), surface),
+    );
   });
 });

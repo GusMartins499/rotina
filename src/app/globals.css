@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --bg: #f4f4f7;
   --surface: #ffffff;
   --veil: rgba(255, 255, 255, 0.72);
@@ -12,17 +13,48 @@
   --past: color-mix(in srgb, var(--bg) 65%, transparent);
   --past-line: color-mix(in srgb, var(--line-strong) 55%, transparent);
   --danger: #c23b3b;
+  --danger-ink: #c23b3b;
+  --danger-soft: #fdeeee;
   --ok: #1a7f4b;
+  --on-fill: #ffffff;
+  --on-inverse: #ffffff;
+  --shadow-ink: 23 23 26;
+  --scrim: rgb(23 23 26 / 0.28);
 
   --step-height: clamp(12px, (100dvh - 186px) / 34, 40px);
   --hour-label-height: 14px;
   --head-height: 34px;
   --radius: 8px;
   --radius-lg: 14px;
-  --shadow: 0 1px 2px rgba(23, 23, 26, 0.05), 0 8px 24px rgba(23, 23, 26, 0.05);
-  --shadow-lifted: 0 2px 6px rgba(23, 23, 26, 0.1), 0 18px 48px rgba(23, 23, 26, 0.16);
+  --shadow: 0 1px 2px rgb(var(--shadow-ink) / 0.05), 0 8px 24px rgb(var(--shadow-ink) / 0.05);
+  --shadow-lifted: 0 2px 6px rgb(var(--shadow-ink) / 0.1), 0 18px 48px rgb(var(--shadow-ink) / 0.16);
   --fast: 140ms cubic-bezier(0.2, 0, 0.2, 1);
   --spring: 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121215;
+  --surface: #1c1c21;
+  --veil: rgba(18, 18, 21, 0.72);
+  --line: #2a2a31;
+  --line-strong: #3b3b44;
+  --text: #ececf1;
+  --muted: #a6a6b0;
+  --faint: #9696a0;
+  --accent: #9d9df5;
+  --accent-soft: #2a2a4a;
+  --danger: #c23b3b;
+  --danger-ink: #ff8f8f;
+  --danger-soft: #3a1f22;
+  --ok: #1a7f4b;
+  --on-fill: #ffffff;
+  --on-inverse: #121215;
+  --shadow-ink: 0 0 0;
+  --scrim: rgb(0 0 0 / 0.55);
+  --shadow: 0 0 0 1px rgb(255 255 255 / 0.03);
+  --shadow-lifted: 0 0 0 1px rgb(255 255 255 / 0.06), 0 16px 40px rgb(0 0 0 / 0.5);
 }
 
 * {
@@ -128,7 +160,7 @@ button[disabled] {
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(23, 23, 26, 0.04);
+  box-shadow: 0 1px 2px rgb(var(--shadow-ink) / 0.04);
   transition:
     background var(--fast),
     border-color var(--fast),
@@ -256,7 +288,7 @@ button[disabled] {
 .hour-column {
   flex: 0 0 auto;
   border-right: 1px solid var(--line-strong);
-  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.012));
+  background: linear-gradient(to right, transparent, rgb(var(--shadow-ink) / 0.012));
 }
 
 .day-column {
@@ -372,7 +404,7 @@ button[disabled] {
   gap: 1px;
   margin: 1px 3px;
   border-radius: var(--radius);
-  color: #ffffff;
+  color: var(--on-fill);
   font-size: 11px;
   line-height: 1.25;
   padding: 3px 7px;
@@ -381,7 +413,7 @@ button[disabled] {
   z-index: 1;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 1px 2px rgba(23, 23, 26, 0.16);
+    0 1px 2px rgb(var(--shadow-ink) / 0.16);
   transition:
     box-shadow var(--fast),
     filter var(--fast),
@@ -392,7 +424,7 @@ button[disabled] {
   filter: brightness(1.07);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 3px 10px rgba(23, 23, 26, 0.22);
+    0 3px 10px rgb(var(--shadow-ink) / 0.22);
 }
 
 .block:active {
@@ -470,9 +502,9 @@ button[disabled] {
 }
 
 .placement-preview[data-refused="true"] {
-  border-color: var(--danger);
-  background: #fdeeee;
-  color: var(--danger);
+  border-color: var(--danger-ink);
+  background: var(--danger-soft);
+  color: var(--danger-ink);
 }
 
 .now-line {
@@ -511,7 +543,7 @@ button[disabled] {
   padding: 16px;
   background: var(--surface);
   border-right: 1px solid var(--line-strong);
-  box-shadow: 8px 0 32px rgba(23, 23, 26, 0.14);
+  box-shadow: 8px 0 32px rgb(var(--shadow-ink) / 0.14);
   overflow-y: auto;
   transform: translateX(-100%);
   opacity: 0;
@@ -571,7 +603,7 @@ button[disabled] {
 
 .drawer-item {
   border-radius: var(--radius);
-  color: #ffffff;
+  color: var(--on-fill);
   padding: 8px 10px;
   font-size: 11px;
   font-weight: 500;
@@ -582,7 +614,7 @@ button[disabled] {
   gap: 8px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 1px 2px rgba(23, 23, 26, 0.12);
+    0 1px 2px rgb(var(--shadow-ink) / 0.12);
   transition:
     transform var(--fast),
     box-shadow var(--fast);
@@ -590,7 +622,7 @@ button[disabled] {
 
 .drawer-item:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(23, 23, 26, 0.2);
+  box-shadow: 0 4px 12px rgb(var(--shadow-ink) / 0.2);
 }
 
 .drawer-item:active {
@@ -623,7 +655,7 @@ button[disabled] {
 
 .drag-overlay {
   border-radius: var(--radius);
-  color: #ffffff;
+  color: var(--on-fill);
   padding: 8px 10px;
   font-size: 11px;
   font-weight: 600;
@@ -741,22 +773,24 @@ button[disabled] {
   bottom: 20px;
   display: block;
   background: var(--text);
-  color: #ffffff;
+  color: var(--on-inverse);
   font-size: 12px;
   font-weight: 500;
   padding: 8px 14px;
   border-radius: 999px;
-  box-shadow: 0 6px 20px rgba(23, 23, 26, 0.24);
+  box-shadow: 0 6px 20px rgb(var(--shadow-ink) / 0.24);
   z-index: 30;
   animation: toast-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .toast[data-state="saved"] {
   background: var(--ok);
+  color: var(--on-fill);
 }
 
 .toast[data-state="failed"] {
   background: var(--danger);
+  color: var(--on-fill);
 }
 
 @keyframes toast-in {
@@ -787,7 +821,7 @@ button[disabled] {
 .scrim {
   position: fixed;
   inset: 0;
-  background: rgba(23, 23, 26, 0.28);
+  background: var(--scrim);
   backdrop-filter: blur(1.5px);
   z-index: 20;
   animation: fade-in 160ms ease-out;
@@ -801,7 +835,7 @@ button[disabled] {
   width: min(380px, 100vw);
   background: var(--surface);
   border-left: 1px solid var(--line-strong);
-  box-shadow: -8px 0 32px rgba(23, 23, 26, 0.14);
+  box-shadow: -8px 0 32px rgb(var(--shadow-ink) / 0.14);
   z-index: 21;
   padding: 16px 18px;
   overflow-y: auto;
@@ -936,7 +970,7 @@ button[disabled] {
 .settings-drawer button[type="submit"] {
   border: 1px solid var(--text);
   background: var(--text);
-  color: #ffffff;
+  color: var(--on-inverse);
   border-radius: var(--radius);
   padding: 8px 13px;
   font-size: 12px;
