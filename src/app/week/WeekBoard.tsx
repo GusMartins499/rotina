@@ -16,6 +16,7 @@ import { formatDuration, intervalLabel } from "../../domain/time";
 import { focusedDayOf } from "../../domain/week";
 import type { Commitment } from "../../repository/schema";
 import { SettingsDrawer } from "../commitments/SettingsDrawer";
+import { ThemeToggle } from "../ThemeToggle";
 import { withinGrid } from "./collision";
 import { useNow } from "./NowProvider";
 import { useSavingToast } from "./useSavingToast";
@@ -219,6 +220,7 @@ export function WeekBoard({
           <div className="app-bar-group">
             <WeeklyLoadButton commitments={commitments} blocks={week.blocks} />
             <ShortcutsButton />
+            <ThemeToggle />
             <SettingsDrawer commitments={commitments} allocatedBlocks={allocatedBlocks}>
               <RoutineTemplate
                 onSave={() => saveTemplate(focus)}

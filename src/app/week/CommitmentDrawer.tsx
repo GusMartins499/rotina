@@ -124,7 +124,7 @@ export function CommitmentDrawer({
           ))}
         </ul>
       )}
-      <p className="drawer-hint">Arraste para a semana. A gaveta se fecha sozinha ao soltar.</p>
+      <p className="drawer-hint">Arraste para a semana.</p>
     </aside>
   );
 }
