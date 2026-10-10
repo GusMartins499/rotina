@@ -1,7 +1,7 @@
 import { mondayOf } from "../domain/week";
 import { countBlocksOf, listCommitments } from "../repository/commitments";
 import { getDatabase } from "../repository/db";
-import { applyRollover } from "../repository/rollover";
+import { applyRollover, hasTemplate } from "../repository/rollover";
 import { ensureWeekPair, listBlocksOfWeek } from "../repository/weeks";
 import { WeekBoard } from "./week/WeekBoard";
 import {
@@ -58,6 +58,7 @@ export default async function Page({
       remove={removeBlockAction}
       saveTemplate={saveTemplateAction}
       applyTemplate={applyTemplateAction}
+      hasTemplate={hasTemplate(db)}
     />
   );
 }

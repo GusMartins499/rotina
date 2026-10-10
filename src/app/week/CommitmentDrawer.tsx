@@ -1,11 +1,12 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { remainingFor, type LoadBlock, type Remainder } from "../../domain/load";
 import { formatDuration, WEEKDAY_LABELS } from "../../domain/time";
 import type { FocusedDay } from "../../domain/week";
 import type { Commitment } from "../../repository/schema";
+import { useDismiss } from "./useDismiss";
 
 type Props = {
   commitments: Commitment[];
@@ -82,35 +83,13 @@ export function CommitmentDrawer({
 }: Props) {
   const panel = useRef<HTMLElement | null>(null);
 
-  useEffect(() => {
-    if (!open || dragging) {
-      return undefined;
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    }
-
-    function onPointerDown(event: PointerEvent) {
-      const target = event.target;
-      if (!(target instanceof Element)) {
-        return;
-      }
-      const onToggle = target.closest('[aria-controls="commitment-drawer"]') !== null;
-      if (!onToggle && panel.current?.contains(target) === false) {
-        onClose();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("pointerdown", onPointerDown);
-    };
-  }, [open, dragging, onClose]);
+  useDismiss({
+    open: open && !dragging,
+    onDismiss: onClose,
+    isInside: (target) =>
+      target.closest('[aria-controls="commitment-drawer"]') !== null ||
+      panel.current?.contains(target) === true,
+  });
 
   return (
     <aside

@@ -79,3 +79,7 @@ export function applyTemplate(db: AppDatabase, weekId: number): void {
     }
   });
 }
+
+export function hasTemplate(db: AppDatabase): boolean {
+  return db.select({ id: templateBlocks.id }).from(templateBlocks).limit(1).get() !== undefined;
+}

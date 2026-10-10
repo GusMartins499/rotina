@@ -7,6 +7,7 @@ import { DeleteCommitment } from "./DeleteCommitment";
 import { EditCommitment } from "./EditCommitment";
 import { NewCommitment } from "./NewCommitment";
 import type { CommitmentInput } from "../../domain/commitment";
+import { useDismiss } from "../week/useDismiss";
 
 type Props = {
   commitments: Commitment[];
@@ -41,26 +42,12 @@ export function SettingsDrawer({ commitments, allocatedBlocks, children }: Props
     return undefined;
   }, [open]);
 
-  useEffect(() => {
-    if (!open) {
-      return undefined;
-    }
-
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
-        gear.current?.focus();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open]);
-
   function close() {
     setOpen(false);
     gear.current?.focus();
   }
+
+  useDismiss({ open, onDismiss: close });
 
   return (
     <>

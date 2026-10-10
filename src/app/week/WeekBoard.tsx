@@ -25,6 +25,8 @@ import { WeekGrid } from "./WeekGrid";
 import { WeeklyLoadButton } from "./WeeklyLoadButton";
 import { WeekSwitcher } from "./WeekSwitcher";
 import { RoutineTemplate } from "./RoutineTemplate";
+import { EmptyWeek } from "./EmptyWeek";
+import { ShortcutsButton } from "./ShortcutsButton";
 import { dropPreviewOf, type Dragged, type SlotTarget } from "./placementPreview";
 import {
   useAllocation,
@@ -44,6 +46,7 @@ type Props = {
   today: string;
   saveTemplate: (focus: Focus) => Promise<WriteResult>;
   applyTemplate: (focus: Focus) => Promise<WriteResult>;
+  hasTemplate: boolean;
   commitments: Commitment[];
   allocatedBlocks: Record<number, number>;
   initialBlocks: PlacedBlock[];
@@ -110,6 +113,7 @@ export function WeekBoard({
   remove,
   saveTemplate,
   applyTemplate,
+  hasTemplate,
 }: Props) {
   const week = useAllocation({
     initialBlocks,
@@ -130,6 +134,8 @@ export function WeekBoard({
     dragged === null || dropSlot === null ? null : dropPreviewOf(dragged, dropSlot, week.blocks);
   const byId = new Map(commitments.map((commitment) => [commitment.id, commitment]));
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+  const applyRoutine = () => applyTemplate(focus);
+  const weekIsEmpty = week.blocks.length === 0;
 
   function handleDragStart(event: DragStartEvent) {
     const block = event.active.data.current?.block as PlacedBlock | undefined;
@@ -213,12 +219,13 @@ export function WeekBoard({
 
           <div className="app-bar-group">
             <WeeklyLoadButton commitments={commitments} blocks={week.blocks} />
+            <ShortcutsButton />
             <ThemeToggle />
             <SettingsDrawer commitments={commitments} allocatedBlocks={allocatedBlocks}>
               <RoutineTemplate
                 onSave={() => saveTemplate(focus)}
-                onApply={() => applyTemplate(focus)}
-                canApply={week.blocks.length === 0}
+                onApply={applyRoutine}
+                canApply={weekIsEmpty}
               />
             </SettingsDrawer>
           </div>
@@ -244,6 +251,13 @@ export function WeekBoard({
             focusedMonday={focusedMonday}
             dropPreview={dropPreview}
           />
+          {weekIsEmpty && (
+            <EmptyWeek
+              hasCommitments={commitments.length > 0}
+              hasTemplate={hasTemplate}
+              onApply={applyRoutine}
+            />
+          )}
         </main>
       </div>
 
