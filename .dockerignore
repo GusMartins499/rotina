@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+.next
+node_modules
+data
+e2e
+docs
+k8s
+test-results
+playwright-report
+*.db
+.env*
+Dockerfile
+.dockerignore
