@@ -13,4 +13,4 @@ resources:
 
 images:
   - name: ghcr.io/gusmartins499/rotina
-    newTag: sha-0000000
+    newTag: sha-ba05f4b
